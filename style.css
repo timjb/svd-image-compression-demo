@@ -13,7 +13,7 @@ h1 {
 
 .wrapper {
   margin: 40px auto;
-  width: 800px;
+  width: 790px;
 }
 
 #drop-target {
@@ -50,8 +50,13 @@ ul.images {
 }
 
 ul.images li {
-  width: 160px;
+  width: 150px;
+  margin-right: 10px;
   float: left;
+}
+
+ul.images li:last-child {
+  margin-right: 0;
 }
 
 ul.images li a:hover {
