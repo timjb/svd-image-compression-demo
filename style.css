@@ -1,0 +1,73 @@
+body {
+  font-family: 'Lucida Grande','Trebuchet MS','Bitstream Vera Sans',Verdana,Helvetica,sans-serif;
+}
+
+h1, h2, h3, h4 {
+  font-weight: normal;
+  font-family: futura, 'century gothic', 'twentieth century', calibri, verdana, helvetica, arial;
+}
+
+h1 {
+  font-size: 52px;
+}
+
+.wrapper {
+  margin: 40px auto;
+  width: 800px;
+}
+
+#drop-target {
+  width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  border-radius: 20px;
+  background: #f3f3f3;
+  border: 6px dashed #bbb;
+}
+
+#drop-target.hover {
+  border-color: #0074D9;
+  background: #E3F7FF;
+}
+
+#drop-text {
+  text-align: center;
+  margin: 32px 0;
+}
+
+#drop-target canvas {
+  display: block;
+  margin: 0 auto;
+}
+
+#options input {
+  font-size: 20px;
+}
+
+ul.images {
+  list-style: none;
+  padding: 0;
+}
+
+ul.images li {
+  width: 160px;
+  float: left;
+}
+
+ul.images li a:hover {
+  opacity: 0.8;
+}
+
+.caption {
+  margin: 4px 0;
+}
+
+.caption a {
+  text-decoration: none;
+  color: #aaa;
+  font-size: 12px;
+}
+
+.caption a:hover {
+  color: #555;
+}

@@ -1,0 +1,59 @@
+<!doctype html>
+
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Image Compression with SVD</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="wrapper">
+    <h1>
+      Image Compression with<br />
+      Singular Value Decomposition
+    </h1>
+  </div>
+  <div id="drop-target">
+    <p id="drop-text"></p>
+  </div>
+  <div class="wrapper">
+    <div id="options">
+    </div>
+    <p>&hellip; or choose one of these:</p>
+    <ul class="images">
+      <li>
+        <a href="cats_medium.jpg">
+          <img src="cats_small.jpg" />
+        </a>
+        <p class="caption">
+          <a href="https://www.flickr.com/photos/jetske/5827857531/in/photolist-9SZi1g-eAcw8-53zkrK-98NZL3-9PvE6T-9vSoog-4kqC8H-8gzU1M-9yMddK-5zvBWg-79wYis-9vkVER-egs32z-oWQzXV-4khc92-dgjgih-2hR4AE-7Gni53-4beFvx-ei7g9j-7yrNCC-A5zqy-6iDNFS-9nmeNx-hv9xDs-dSek7E-DU2t-myyxmL-dj7A8M-jz9QM6-4qFQYF-fXRSo-iVKeLo-e3uwEk-wRGt3-8juCLz-5nEbcc-4cwiM4-nmb7a8-bNn56X-4VoiFG-61nyT7-9ZZbx7-iDot64-bihUhn-iErrSn-sBzeE-iUdbzi-4sKwQN-dUtpsb/">
+            By Jetske
+          </a>
+        </p>
+      </li>
+      <li>
+        <a href="mondrian_medium.jpg">
+          <img src="mondrian_small.jpg" />
+        </a>
+        <p class="caption">
+          <a href="https://www.flickr.com/photos/raelga/4408707212/">
+            By Rael Garcia Arnes
+          </a>
+        </p>
+      </li>
+    </ul>
+  </div>
+
+  <!--<script src="numeric-1.2.6.min.js"></script>-->
+  <script src="svd.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  <script src="app.js"></script>
+
+  <script>
+    initialize();
+  </script>
+</body>
+
+</html>
