@@ -84,12 +84,8 @@ function initializeImage (img) {
   var blueSvd = svd(pixels.blue, h, w);
 
   function renderImage (numSvs) {
-    var redPrime = combineSVD(redSvd, h, w, numSvs);
-    var greenPrime = combineSVD(greenSvd, h, w, numSvs);
-    var bluePrime = combineSVD(blueSvd, h, w, numSvs);
-
-    var pixelsPrime = { red: redPrime, green: greenPrime, blue: bluePrime, alpha: pixels.alpha };
-    copyPixelsToImageData(pixelsPrime, imageData);
+    var svds = { red: redSvd, green: greenSvd, blue: blueSvd };
+    svdsToImageData(svds, numSvs, imageData);
     ctx.putImageData(imageData, 0, 0);
   }
 
@@ -131,21 +127,6 @@ function svd (a, m, n) {
 }
 */
 
-function combineSVD (svd, m, n, k) {
-  var u = svd.u, s = svd.s, v = svd.v;
-  var mat = createZeroMatrix(m, n);
-  for (var y = 0; y < m; y++) {
-    for (var x = 0; x < n; x++) {
-      var t = 0;
-      for (var i = 0; i < k; i++) {
-        t += v[x][i] * s[i] * u[y][i];
-      }
-      mat[y][x] = t;
-    }
-  }
-  return mat;
-}
-
 function imageDataToPixels (imageData) {
   var w = imageData.width, h = imageData.height;
   var red = [], green = [], blue = [], alpha = [];
@@ -177,6 +158,32 @@ function copyPixelsToImageData (pixels, imageData) {
       imageData.data[i++] = greenRow[x];
       imageData.data[i++] = blueRow[x];
       imageData.data[i++] = alphaRow[x];
+    }
+  }
+}
+
+function svdsToImageData (svds, numSvs, imageData) {
+  var w = imageData.width, h = imageData.height;
+  var redSvd = svds.red, greenSvd = svds.green, blueSvd = svds.blue;
+  var redU = redSvd.u, redV = redSvd.v, redS = redSvd.s;
+  var greenU = greenSvd.u, greenV = greenSvd.v, greenS = greenSvd.s;
+  var blueU = blueSvd.u, blueV = blueSvd.v, blueS = blueSvd.s;
+
+  var i = 0;
+  for (var y = 0; y < h; y++) {
+    for (var x = 0; x < w; x++) {
+      var r = 0, g = 0, b = 0;
+      for (var k = 0; k < numSvs; k++) {
+        r += redV[x][k] * redS[k] * redU[y][k];
+        g += greenV[x][k] * greenS[k] * greenU[y][k];
+        b += blueV[x][k] * blueS[k] * blueU[y][k];
+      }
+
+      imageData.data[i] = r;
+      imageData.data[i+1] = g;
+      imageData.data[i+2] = b;
+      imageData.data[i+3] = 255;
+      i += 4;
     }
   }
 }
