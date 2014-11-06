@@ -26,7 +26,7 @@ References:
   http://www.nr.com/
 */
 
-var SVD = SVD || {};
+var SVD = (typeof exports === 'undefined') ? {} : exports;
 
 SVD.svdcmp = function(a, m, n, w, v){
   var flag, i, its, j, jj, k, l, nm,

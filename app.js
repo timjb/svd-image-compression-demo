@@ -77,15 +77,15 @@ function initializeImage (img) {
   ctx.drawImage(img, 0, 0);
 
   var imageData = ctx.getImageData(0, 0, w, h);
-  var pixels = imageDataToPixels(imageData);
+  var pixels = imageSvd.imageDataToPixels(imageData);
 
-  var redSvd = svd(pixels.red, h, w);
-  var greenSvd = svd(pixels.green, h, w);
-  var blueSvd = svd(pixels.blue, h, w);
+  var redSvd = imageSvd.svd(pixels.red, h, w);
+  var greenSvd = imageSvd.svd(pixels.green, h, w);
+  var blueSvd = imageSvd.svd(pixels.blue, h, w);
 
   function renderImage (numSvs) {
     var svds = { red: redSvd, green: greenSvd, blue: blueSvd };
-    svdsToImageData(svds, numSvs, imageData);
+    imageSvd.svdsToImageData(svds, numSvs, imageData);
     ctx.putImageData(imageData, 0, 0);
   }
 
@@ -104,49 +104,6 @@ function initializeImage (img) {
   initializeUserInterface();
 }
 
-function svd (a, m, n) {
-  var d = Math.max(m, n);
-  var s = new Float32Array(d); // will contain the singular values
-  var v = createZeroMatrix(d, d);
-
-  var u = createZeroMatrix(d, d);
-  for (var y = 0; y < m; y++) {
-    for (var x = 0; x < n; x++) {
-      u[y][x] = a[y][x];
-    }
-  }
-
-  SVD.svdcmp(u, m, n, s, v);
-  return { u: u, s: s, v: v };
-}
-
-/*
-function svd (a, m, n) {
-  var res = numeric.svd(a);
-  return { u: res.U, s: res.S, v: res.V };
-}
-*/
-
-function imageDataToPixels (imageData) {
-  var w = imageData.width, h = imageData.height;
-  var red = [], green = [], blue = [], alpha = [];
-  var i = 0;
-  for (var y = 0; y < h; y++) {
-    var redRow = [], greenRow = [], blueRow = [], alphaRow = [];
-    for (var x = 0; x < w; x++) {
-      redRow[x] = imageData.data[i++];
-      greenRow[x] = imageData.data[i++];
-      blueRow[x] = imageData.data[i++];
-      alphaRow[x] = imageData.data[i++];
-    }
-    red[y] = redRow;
-    green[y] = greenRow;
-    blue[y] = blueRow;
-    alpha[y] = alphaRow;
-  }
-  return { red: red, green: green, blue: blue, alpha: alpha };
-}
-
 function copyPixelsToImageData (pixels, imageData) {
   var w = imageData.width, h = imageData.height;
   var red = pixels.red, green = pixels.green, blue = pixels.blue, alpha = pixels.alpha;
@@ -161,40 +118,6 @@ function copyPixelsToImageData (pixels, imageData) {
     }
   }
 }
-
-function svdsToImageData (svds, numSvs, imageData) {
-  var w = imageData.width, h = imageData.height;
-  var redSvd = svds.red, greenSvd = svds.green, blueSvd = svds.blue;
-  var redU = redSvd.u, redV = redSvd.v, redS = redSvd.s;
-  var greenU = greenSvd.u, greenV = greenSvd.v, greenS = greenSvd.s;
-  var blueU = blueSvd.u, blueV = blueSvd.v, blueS = blueSvd.s;
-
-  var i = 0;
-  for (var y = 0; y < h; y++) {
-    for (var x = 0; x < w; x++) {
-      var r = 0, g = 0, b = 0;
-      for (var k = 0; k < numSvs; k++) {
-        r += redV[x][k] * redS[k] * redU[y][k];
-        g += greenV[x][k] * greenS[k] * greenU[y][k];
-        b += blueV[x][k] * blueS[k] * blueU[y][k];
-      }
-
-      imageData.data[i] = r;
-      imageData.data[i+1] = g;
-      imageData.data[i+2] = b;
-      imageData.data[i+3] = 255;
-      i += 4;
-    }
-  }
-}
-
-function createZeroMatrix (m, n) {
-  var mat = [];
-  for (var y = 0; y < m; y++) {
-    mat[y] = new Float32Array(n);
-  }
-  return mat;
-};
 
 var A = [[0,1,0],[2,0,0],[0,0,3]];
 
