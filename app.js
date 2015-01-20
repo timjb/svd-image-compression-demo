@@ -5,7 +5,13 @@ var dropTarget = $('#drop-target');
 var dropText = $('#drop-text');
 var options = $('#options');
 
-var dropInfoText = "Drop an image here &hellip;";
+var fileInputHtml =
+    '<div id="file-input-button">' +
+      '<span>choose an image file</span>' +
+      '<input type="file" accept="image/*" id="file-input" />' +
+    '</div>';
+
+var dropInfoText = 'Drop an image here, ' + fileInputHtml + ' &hellip;';
 
 function initialize () {
   if (typeof window.FileReader === 'undefined') {
@@ -13,6 +19,25 @@ function initialize () {
   } else {
     dropText.html(dropInfoText);
   }
+
+  function loadFile (file) {
+    var reader = new FileReader();
+    reader.onload = function (event) {
+      loadImage(event.target.result);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  $(document.body).delegate('#file-input', 'change', function () {
+    if (this.files && this.files[0]) {
+      var file = this.files[0];
+      if (!file.type.match(/image.*/)) {
+        dropText.html("The chosen file is not an image! Try another file &hellip;<br />" + dropInfoText);
+      } else {
+        loadFile(file);
+      }
+    }
+  });
 
   dropTarget
     .on('dragover', function (evt) {
@@ -29,17 +54,12 @@ function initialize () {
       evt.preventDefault();
 
       var file = evt.dataTransfer.files[0];
-      if (!file.type.match(/image.*/)){
-        dropText.html("The dropped file is not an image! Try another file &hellip;");
+      if (!file.type.match(/image.*/)) {
+        dropText.html("The dropped file is not an image! Try another file &hellip;<br />" + dropInfoText);
         dropTarget.empty().append(dropText);
-        return;
+      } else {
+        loadFile(file);
       }
-
-      var reader = new FileReader();
-      reader.onload = function (event) {
-        loadImage(event.target.result);
-      };
-      reader.readAsDataURL(file);
 
       return false;
     });

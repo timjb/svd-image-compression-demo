@@ -1,5 +1,6 @@
 body {
   font-family: 'Lucida Grande','Trebuchet MS','Bitstream Vera Sans',Verdana,Helvetica,sans-serif;
+  /*font-size: 16px;*/
 }
 
 h1, h2, h3, h4 {
@@ -32,7 +33,7 @@ h1 {
 
 #drop-text {
   text-align: center;
-  margin: 32px 0;
+  line-height: 80px;
 }
 
 #drop-target canvas {
@@ -47,6 +48,15 @@ h1 {
 ul.images {
   list-style: none;
   padding: 0;
+}
+
+/* Clearfix hack: http://www.positioniseverything.net/easyclearing.html */
+ul.images:after {
+  content: ".";
+  display: block;
+  height: 0;
+  clear: both;
+  visibility: hidden;
 }
 
 ul.images li {
@@ -75,4 +85,38 @@ ul.images li a:hover {
 
 .caption a:hover {
   color: #555;
+}
+
+/*
+ * Hack to style the file upload button
+ * see http://stackoverflow.com/questions/1084925/input-type-file-show-only-button
+ */
+#file-input-button {
+  display: inline-block;
+  position: relative;
+  cursor: pointer;
+  border: 1px solid #888;
+  border-radius: 5px;
+  line-height: 24px;
+  overflow: hidden;
+  vertical-align: middle;
+}
+
+#file-input-button span {
+  cursor: pointer;
+  margin: 0 5px;
+  font-size: 14px;
+}
+
+#file-input-button:hover {
+  background: #ddd;
+}
+
+#file-input-button input {
+  cursor: pointer;
+  display: block;
+  position: absolute; top: 0; right: 0;
+  height: 100%;
+  opacity: 0;
+  font-size: 40px;
 }
