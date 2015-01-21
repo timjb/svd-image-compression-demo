@@ -113,9 +113,22 @@ function initializeImage (img) {
   renderImage(startNumSvs);
 
   function initializeUserInterface () {
-    var slider = $('<input />').attr({ type: 'number', value: startNumSvs, min: 1, max: 50 });
-    options.empty().append(slider);
-    slider.on('change', function () {
+    //var slider = $('<input />').attr({ type: 'number', value: startNumSvs, min: 1, max: 50 });
+    var slider = $('<div class="slider" />');
+    options.empty().append(slider).addClass('active');
+    slider.noUiSlider({
+      // TODO: adapt to image size
+      range: {
+        'min': [1,1],
+        '20%': [10,2],
+        '30%': [20,10],
+        '50%': [100,20],
+        'max': [Math.min(w,h)]
+      },
+      start: startNumSvs
+    }).noUiSlider_pips({
+      mode: 'steps'
+    }).on('change', function () {
       console.log(slider.val());
       renderImage(slider.val());
     });
