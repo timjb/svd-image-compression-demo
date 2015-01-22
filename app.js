@@ -88,6 +88,44 @@ function loadImage (src) {
   img.src = src;
 }
 
+var calculateSvds = (function () {
+  var redWorker = new Worker('svd-worker.js');
+  var greenWorker = new Worker('svd-worker.js');
+  var blueWorker = new Worker('svd-worker.js');
+  var redSvd, greenSvd, blueSvd;
+  var callback;
+
+  function maybeCallback () {
+    if (redSvd && greenSvd && blueSvd && callback) {
+      callback(redSvd, greenSvd, blueSvd);
+    }
+  }
+
+  redWorker.onmessage = function (res) {
+    console.log(res);
+    redSvd = res.data;
+    maybeCallback();
+  };
+
+  greenWorker.onmessage = function (res) {
+    greenSvd = res.data;
+    maybeCallback();
+  };
+
+  blueWorker.onmessage = function (res) {
+    blueSvd = res.data;
+    maybeCallback();
+  };
+
+  return function (m, n, rpx, gpx, bpx, cb) {
+    redSvd = greenSvd = blueSvd = null;
+    callback = cb;
+    redWorker.postMessage({ m: m, n: n, a: rpx });
+    greenWorker.postMessage({ m: m, n: n, a: gpx });
+    blueWorker.postMessage({ m: m, n: n, a: bpx });
+  }
+})();
+
 function initializeImage (img) {
   var w = img.width, h = img.height;
   var canvas = $('<canvas />').attr({ width: w, height: h });
@@ -99,57 +137,40 @@ function initializeImage (img) {
   var imageData = ctx.getImageData(0, 0, w, h);
   var pixels = imageSvd.imageDataToPixels(imageData);
 
-  var redSvd = imageSvd.svd(pixels.red, h, w);
-  var greenSvd = imageSvd.svd(pixels.green, h, w);
-  var blueSvd = imageSvd.svd(pixels.blue, h, w);
-
-  function renderImage (numSvs) {
-    var svds = { red: redSvd, green: greenSvd, blue: blueSvd };
-    imageSvd.svdsToImageData(svds, numSvs, imageData);
-    ctx.putImageData(imageData, 0, 0);
-  }
-
-  var startNumSvs = 5;
-  renderImage(startNumSvs);
-
-  function initializeUserInterface () {
-    //var slider = $('<input />').attr({ type: 'number', value: startNumSvs, min: 1, max: 50 });
-    var slider = $('<div class="slider" />');
-    options.empty().append(slider).addClass('active');
-    slider.noUiSlider({
-      // TODO: adapt to image size
-      range: {
-        'min': [1,1],
-        '20%': [10,2],
-        '30%': [20,10],
-        '50%': [100,20],
-        'max': [Math.min(w,h)]
-      },
-      start: startNumSvs
-    }).noUiSlider_pips({
-      mode: 'steps'
-    }).on('change', function () {
-      console.log(slider.val());
-      renderImage(slider.val());
-    });
-  }
-
-  initializeUserInterface();
-}
-
-function copyPixelsToImageData (pixels, imageData) {
-  var w = imageData.width, h = imageData.height;
-  var red = pixels.red, green = pixels.green, blue = pixels.blue, alpha = pixels.alpha;
-  var i = 0;
-  for (var y = 0; y < h; y++) {
-    var redRow = red[y], greenRow = green[y], blueRow = blue[y], alphaRow = alpha[y];
-    for (var x = 0; x < w; x++) {
-      imageData.data[i++] = redRow[x];
-      imageData.data[i++] = greenRow[x];
-      imageData.data[i++] = blueRow[x];
-      imageData.data[i++] = alphaRow[x];
+  calculateSvds(h, w, pixels.red, pixels.green, pixels.blue, function (redSvd, greenSvd, blueSvd) {
+    function renderImage (numSvs) {
+      var svds = { red: redSvd, green: greenSvd, blue: blueSvd };
+      imageSvd.svdsToImageData(svds, numSvs, imageData);
+      ctx.putImageData(imageData, 0, 0);
     }
-  }
+
+    var startNumSvs = 5;
+    renderImage(startNumSvs);
+
+    function initializeUserInterface () {
+      //var slider = $('<input />').attr({ type: 'number', value: startNumSvs, min: 1, max: 50 });
+      var slider = $('<div class="slider" />');
+      options.empty().append(slider).addClass('active');
+      slider.noUiSlider({
+        // TODO: adapt to image size
+        range: {
+          'min': [1,1],
+          '20%': [10,2],
+          '30%': [20,10],
+          '50%': [100,20],
+          'max': [Math.min(w,h)]
+        },
+        start: startNumSvs
+      }).noUiSlider_pips({
+        mode: 'steps'
+      }).on('change', function () {
+        console.log(slider.val());
+        renderImage(slider.val());
+      });
+    }
+
+    initializeUserInterface();
+  });
 }
 
 var A = [[0,1,0],[2,0,0],[0,0,3]];
