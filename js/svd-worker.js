@@ -1,4 +1,4 @@
-importScripts(['svd.js']);
+importScripts(['../deps/svd.js']);
 
 this.onmessage = function (msg) {
   postMessage(svd(msg.data.a, msg.data.m, msg.data.n));

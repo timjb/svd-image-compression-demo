@@ -89,9 +89,9 @@ function loadImage (src) {
 }
 
 var calculateSvds = (function () {
-  var redWorker = new Worker('svd-worker.js');
-  var greenWorker = new Worker('svd-worker.js');
-  var blueWorker = new Worker('svd-worker.js');
+  var redWorker = new Worker('js/svd-worker.js');
+  var greenWorker = new Worker('js/svd-worker.js');
+  var blueWorker = new Worker('js/svd-worker.js');
   var redSvd, greenSvd, blueSvd;
   var callback;
 
@@ -123,7 +123,7 @@ var calculateSvds = (function () {
     redWorker.postMessage({ m: m, n: n, a: rpx });
     greenWorker.postMessage({ m: m, n: n, a: gpx });
     blueWorker.postMessage({ m: m, n: n, a: bpx });
-  }
+  };
 })();
 
 function initializeImage (img) {
