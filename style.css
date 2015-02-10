@@ -36,9 +36,29 @@ h1 {
   line-height: 80px;
 }
 
+.drop-target.has-content {
+  padding: 0;
+  background: #f3f3f3;
+}
+
+.drop-target.has-content .drop-text {
+  line-height: 36px;
+  padding: 0 0 20px;
+  margin: 0;
+  background: #e0e0e0;
+  border-radius: 14px;
+}
+
 .drop-target canvas {
   display: block;
   margin: 0 auto;
+}
+
+.drop-target .content {
+  margin: -20px 0 0;
+  padding: 20px;
+  border-radius: 14px;
+  background: #f3f3f3;
 }
 
 .options {

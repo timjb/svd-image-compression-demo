@@ -107,21 +107,17 @@ var DropTarget = React.createClass({displayName: "DropTarget",
   },
 
   render: function () {
-    var content;
-    if (this.props.children) {
-      content = this.props.children;
-    } else if (typeof window.FileReader === 'undefined') {
-      content = (
-        React.createElement("p", {className: "drop-text"}, 
-          "Dropping images is not supported by your browser. Please upgrade to a modern browser."
-        )
-      );
+    var dropText;
+    if (typeof window.FileReader === 'undefined') {
+      React.createElement("p", {className: "drop-text"}, 
+        "Dropping images is not supported by your browser. Please upgrade to a modern browser."
+      )
     } else if (this.state.hover) {
-      content = React.createElement("p", {className: "drop-text"}, "Drop now …");
+      dropText = React.createElement("p", {className: "drop-text"}, "Drop now …");
     } else {
       var err = this.state.error ? React.createElement("span", null, this.state.error, " Try another file …", React.createElement("br", null)) : "";
       this.fileInput = React.createElement(FileInputField, {onChange: this.onFileChosen});
-      content = (
+      var dropText = (
         React.createElement("p", {className: "drop-text"}, 
           err, 
           "Drop an image here, ", this.fileInput, " …"
@@ -130,11 +126,13 @@ var DropTarget = React.createClass({displayName: "DropTarget",
     }
 
     return (
-      React.createElement("div", {className: "drop-target" + (this.state.hover ? " hover" : ""), 
+      React.createElement("div", {className: "drop-target" + (this.state.hover ? " hover" : "")
+                                    + (this.props.children ? " has-content" : ""), 
            onDragOver: this.onDragOver, 
            onDragLeave: this.onDragLeave, 
            onDrop: this.onDrop}, 
-        content
+        dropText, 
+        this.props.children ? React.createElement("div", {className: "content"}, this.props.children) : ""
       )
     );
   }

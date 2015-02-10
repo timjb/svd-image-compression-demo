@@ -107,21 +107,17 @@ var DropTarget = React.createClass({
   },
 
   render: function () {
-    var content;
-    if (this.props.children) {
-      content = this.props.children;
-    } else if (typeof window.FileReader === 'undefined') {
-      content = (
-        <p className="drop-text">
-          Dropping images is not supported by your browser. Please upgrade to a modern browser.
-        </p>
-      );
+    var dropText;
+    if (typeof window.FileReader === 'undefined') {
+      <p className="drop-text">
+        Dropping images is not supported by your browser. Please upgrade to a modern browser.
+      </p>
     } else if (this.state.hover) {
-      content = <p className="drop-text">Drop now &hellip;</p>;
+      dropText = <p className="drop-text">Drop now &hellip;</p>;
     } else {
       var err = this.state.error ? <span>{this.state.error} Try another file &hellip;<br /></span> : "";
       this.fileInput = <FileInputField onChange={this.onFileChosen} />;
-      content = (
+      var dropText = (
         <p className="drop-text">
           {err}
           Drop an image here, {this.fileInput} &hellip;
@@ -130,11 +126,13 @@ var DropTarget = React.createClass({
     }
 
     return (
-      <div className={"drop-target" + (this.state.hover ? " hover" : "")}
+      <div className={"drop-target" + (this.state.hover ? " hover" : "")
+                                    + (this.props.children ? " has-content" : "")}
            onDragOver={this.onDragOver}
            onDragLeave={this.onDragLeave}
            onDrop={this.onDrop}>
-        {content}
+        {dropText}
+        {this.props.children ? <div className="content">{this.props.children}</div> : ""}
       </div>
     );
   }
