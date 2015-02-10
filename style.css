@@ -17,7 +17,7 @@ h1 {
   width: 790px;
 }
 
-#drop-target {
+.drop-target {
   width: 800px;
   margin: 0 auto;
   padding: 20px;
@@ -26,22 +26,22 @@ h1 {
   border: 6px dashed #bbb;
 }
 
-#drop-target.hover {
+.drop-target.hover {
   border-color: #0074D9;
   background: #E3F7FF;
 }
 
-#drop-text {
+.drop-text {
   text-align: center;
   line-height: 80px;
 }
 
-#drop-target canvas {
+.drop-target canvas {
   display: block;
   margin: 0 auto;
 }
 
-#options.active {
+.options {
   height: 64px;
 }
 
@@ -91,7 +91,7 @@ ul.images li a:hover {
  * Hack to style the file upload button
  * see http://stackoverflow.com/questions/1084925/input-type-file-show-only-button
  */
-#file-input-button {
+.file-input-button {
   display: inline-block;
   position: relative;
   cursor: pointer;
@@ -102,17 +102,17 @@ ul.images li a:hover {
   vertical-align: middle;
 }
 
-#file-input-button span {
+.file-input-button span {
   cursor: pointer;
   margin: 0 5px;
   font-size: 14px;
 }
 
-#file-input-button:hover {
+.file-input-button:hover {
   background: #ddd;
 }
 
-#file-input-button input {
+.file-input-button input {
   cursor: pointer;
   display: block;
   position: absolute; top: 0; right: 0;
