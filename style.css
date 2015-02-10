@@ -140,3 +140,17 @@ ul.images li a:hover {
   opacity: 0;
   font-size: 40px;
 }
+
+.credits {
+  font-size: 14px;
+  color: #888;
+}
+
+.credits a {
+  color: #666;
+  text-decoration: none;
+}
+
+.credits a:hover {
+  color: #333;
+}
