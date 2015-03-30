@@ -1,42 +1,20 @@
-# Linux or Windows:
-CC = gcc -Wall -O4
-# CC = icc -w1 -O3
+# Use emscripten as a compiler
+CC = emcc -Wall -O3
 
-# Macintosh:
-ifeq (${HOSTTYPE},powerpc)
-  CC = cc -pipe -O3 -Wall -fno-common -arch ppc
-endif
+svd: Makefile build/svdlibc.js
 
-# If no host type is set, use the "bin" directory for output.
-ifndef HOSTTYPE:
-  HOSTTYPE=bin
-endif
-
-LIBS=-lm
-OBJ=svdlib.o svdutil.o las2.o
-
-svd: Makefile main.o libsvd.a
-	${CC} ${CFLAGS} -o svd main.o libsvd.a ${LIBS}
-	mv -f $@ ${HOSTTYPE}/$@
-	ln -s ${HOSTTYPE}/$@ $@
-main.o: Makefile main.c svdlib.h
-	${CC} ${CFLAGS} -c main.c
-
-libsvd.a: ${HOSTTYPE} ${OBJ}
-	rm -f $@ ${HOSTTYPE}/$@
-	ar cr $@ ${OBJ}
-	ranlib $@
-	mv -f $@ ${HOSTTYPE}/$@
-	ln -s ${HOSTTYPE}/$@ $@
-svdlib.o: Makefile svdlib.h svdlib.c
-	${CC} ${CFLAGS} -c svdlib.c
-svdutil.o: Makefile svdutil.c svdutil.h
-	${CC} ${CFLAGS} -c svdutil.c
-las2.o: Makefile las2.c svdlib.h svdutil.h
-	${CC} ${CFLAGS} -c las2.c
+build/svdlibc.js: Makefile build/jsapi.bc build/svdlib.bc build/svdutil.bc build/las2.bc
+	${CC} build/jsapi.bc build/svdlib.bc build/svdutil.bc build/las2.bc \
+	    -o build/svdlibc.js \
+	    -s TOTAL_MEMORY=32000000 \
+	    -s EXPORTED_FUNCTIONS="['_createDMat','_svdConvertDtoS','_svdFreeSMat','_svdLAS2A','_dmatGetRows','_dmatGetCols','_dmatGetValue','_svdrecGetD','_svdrecGetUt','_svdrecGetS','_svdrecGetVt','_svdFreeSVDRec']"
+build/jsapi.bc: Makefile svdlib.h jsapi.c
+	${CC} ${CFLAGS} -c jsapi.c -o build/jsapi.bc
+build/svdlib.bc: Makefile svdlib.h svdlib.c
+	${CC} ${CFLAGS} -c svdlib.c -o build/svdlib.bc
+build/svdutil.bc: Makefile svdutil.c svdutil.h
+	${CC} ${CFLAGS} -c svdutil.c -o build/svdutil.bc
+build/las2.bc: Makefile las2.c svdlib.h svdutil.h
+	${CC} ${CFLAGS} -c las2.c -o build/las2.bc
 clean: 
 	rm *.o
-
-$(HOSTTYPE):
-	if test ! -d $(HOSTTYPE); \
-	then mkdir $(HOSTTYPE); fi
