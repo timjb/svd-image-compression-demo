@@ -4,40 +4,46 @@ var imageSvd = (typeof exports === 'undefined') ? {} : exports;
 var SVD = (typeof require === 'function') ? require('./svd') : SVD;
 
 imageSvd.imageDataToPixels = function (imageData) {
-  var w = imageData.width, h = imageData.height;
-  var red = [], green = [], blue = [], alpha = [];
+  var n = imageData.width, m = imageData.height;
+  var red   = new Float64Array(m*n);
+  var green = new Float64Array(m*n);
+  var blue  = new Float64Array(m*n);
   var i = 0;
-  for (var y = 0; y < h; y++) {
-    var redRow = [], greenRow = [], blueRow = [], alphaRow = [];
-    for (var x = 0; x < w; x++) {
-      redRow[x] = imageData.data[i++];
-      greenRow[x] = imageData.data[i++];
-      blueRow[x] = imageData.data[i++];
-      alphaRow[x] = imageData.data[i++];
+  for (var y = 0; y < m; y++) {
+    for (var x = 0; x < n; x++) {
+      var q = x*m + y;
+      red[q]   = imageData.data[i];
+      green[q] = imageData.data[i+1];
+      blue[q]  = imageData.data[i+2];
+      i += 4; // skip alpha value
     }
-    red[y] = redRow;
-    green[y] = greenRow;
-    blue[y] = blueRow;
-    alpha[y] = alphaRow;
   }
-  return { red: red, green: green, blue: blue, alpha: alpha };
+  return { red: red, green: green, blue: blue };
 };
 
 imageSvd.svdsToImageData = function (svds, numSvs, imageData) {
-  var w = imageData.width, h = imageData.height;
+  var n = imageData.width, m = imageData.height, k = Math.min(n, m);
   var redSvd = svds.red, greenSvd = svds.green, blueSvd = svds.blue;
-  var redU = redSvd.u, redV = redSvd.v, redS = redSvd.s;
-  var greenU = greenSvd.u, greenV = greenSvd.v, greenS = greenSvd.s;
-  var blueU = blueSvd.u, blueV = blueSvd.v, blueS = blueSvd.s;
+  var redU = redSvd.u, redVt = redSvd.vt, redS = redSvd.s;
+  var greenU = greenSvd.u, greenVt = greenSvd.vt, greenS = greenSvd.s;
+  var blueU = blueSvd.u, blueVt = blueSvd.vt, blueS = blueSvd.s;
+
+  console.log(redSvd, greenSvd, blueSvd);
+
+  var w = [];
 
   var i = 0;
-  for (var y = 0; y < h; y++) {
-    for (var x = 0; x < w; x++) {
+  for (var y = 0; y < m; y++) {
+    for (var x = 0; x < n; x++) {
       var r = 0, g = 0, b = 0;
-      for (var k = 0; k < numSvs; k++) {
-        r += redV[x][k] * redS[k] * redU[y][k];
-        g += greenV[x][k] * greenS[k] * greenU[y][k];
-        b += blueV[x][k] * blueS[k] * blueU[y][k];
+      for (var d = numSvs - 1; d >= 0; d--) {
+        r += redU[d*m+y] * redS[d] * redVt[x*k+d];
+        g += greenU[d*m+y] * greenS[d] * greenVt[x*k+d];
+        b += blueU[d*m+y] * blueS[d] * blueVt[x*k+d];
+      }
+
+      if (r === 0 && g === 0 && b === 0) {
+        w.push({ x: x, y: y });
       }
 
       imageData.data[i] = r;
@@ -47,6 +53,8 @@ imageSvd.svdsToImageData = function (svds, numSvs, imageData) {
       i += 4;
     }
   }
+
+  console.log(w);
 };
 
 function createZeroMatrix (m, n) {
