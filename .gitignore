@@ -1,2 +1,5 @@
 .DS_Store
 build/.module-cache
+*.bc
+*.o
+*.a
