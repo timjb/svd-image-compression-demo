@@ -1,4 +1,3 @@
-var Module = { locateFile : function (file) { return "../build/" + file; } };
 importScripts(['../build/clapack.js']);
 
 this.onmessage = function (msg) {
@@ -28,6 +27,8 @@ function svdApprox (a, m, n) {
   var arr_vt = new Float64Array(buf, ptr_vt, t * n);
 
   for (var i = 0; i < a.length; i++) { arr_a[i] = a[i]; }
+
+  console.log(arr_a);
 
   var timerName = "svd_simple_approx" + (Math.round(Math.random() * 100));
   console.time(timerName);

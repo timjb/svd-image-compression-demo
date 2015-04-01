@@ -1,32 +1,60 @@
 var calculateSvds = (function () {
-  var redWorker = new Worker('js/svd-worker.js');
-  var greenWorker = new Worker('js/svd-worker.js');
-  var blueWorker = new Worker('js/svd-worker.js');
-  var redSvd, greenSvd, blueSvd;
-  var callback;
+  function start () { return new Worker('js/svd-worker.js'); }
 
+  var callback = null;
   function maybeCallback () {
     if (redSvd && greenSvd && blueSvd && callback) {
-      callback(redSvd, greenSvd, blueSvd);
+      var cb = callback;
+      callback = null;
+      cb(redSvd, greenSvd, blueSvd);
+      redSvd = greenSvd = blueSvd = null;
     }
   }
 
-  redWorker.onmessage = function (res) {
-    redSvd = res.data;
-    maybeCallback();
-  };
+  var redWorker, redSvd;
+  function initRedWorker () {
+    if (redWorker) { redWorker.terminate(); }
+    redWorker = start();
+    redWorker.onmessage = function (res) {
+      redSvd = res.data;
+      maybeCallback();
+    };
+  }
 
-  greenWorker.onmessage = function (res) {
-    greenSvd = res.data;
-    maybeCallback();
-  };
+  var greenWorker, greenSvd;
+  function initGreenWorker () {
+    if (greenWorker) { greenWorker.terminate(); }
+    greenWorker = start();
+    greenWorker.onmessage = function (res) {
+      greenSvd = res.data;
+      maybeCallback();
+    };
+  }
 
-  blueWorker.onmessage = function (res) {
-    blueSvd = res.data;
-    maybeCallback();
-  };
+  var blueWorker, blueSvd;
+  function initBlueWorker () {
+    if (blueWorker) { blueWorker.terminate(); }
+    blueWorker = start();
+    blueWorker.onmessage = function (res) {
+      blueSvd = res.data;
+      maybeCallback();
+    };
+  }
+
+  initRedWorker();
+  initGreenWorker();
+  initBlueWorker();
 
   return function (m, n, rpx, gpx, bpx, approx, cb) {
+    /* It would be great if the web worker API allowed one to simply abort the
+       current task a worker is executing by e.g. throwing an exception in the
+       worker. With this, all the initialization and memory allocation of
+       Emscripten associated with a complete restart could be avoided. */
+    if (callback) {
+      if (!redSvd)   { initRedWorker(); }
+      if (!greenSvd) { initGreenWorker(); }
+      if (!blueSvd)  { initBlueWorker(); }
+    }
     redSvd = greenSvd = blueSvd = null;
     callback = cb;
     redWorker.postMessage({ m: m, n: n, a: rpx, approx: approx });
@@ -323,7 +351,7 @@ var App = React.createClass({displayName: "App",
       React.createElement("p", {className: "approx-info"}, 
         "Showing approximate SVD  ", 
         React.createElement("img", {src: "deps/spinner.gif"}), 
-        "  Wait for precise result"
+        "  Computing precise result …"
       )
     );
     return (
