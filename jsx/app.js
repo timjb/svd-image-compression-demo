@@ -287,11 +287,11 @@ var App = React.createClass({
     calculateSvds(h, w, pxls.red, pxls.green, pxls.blue, true,
                   function (redSvdApprox, greenSvdApprox, blueSvdApprox) {
       var svdsApprox = { red: redSvdApprox, green: greenSvdApprox, blue: blueSvdApprox };
-      this.setState({ svds: svdsApprox, width: w, height: h });
+      this.setState({ svds: svdsApprox, approx: true, width: w, height: h });
       calculateSvds(h, w, pxls.red, pxls.green, pxls.blue, false,
                     function (redSvd, greenSvd, blueSvd) {
         var svds = { red: redSvd, green: greenSvd, blue: blueSvd };
-        this.setState({ svds: svds, width: w, height: h });
+        this.setState({ svds: svds, approx: false });
       }.bind(this));
     }.bind(this));
   },
@@ -318,12 +318,25 @@ var App = React.createClass({
 
   render: function () {
     var w = this.state.width, h = this.state.height;
+    //var k = Math.min(w, h, 50);
+    var approxInfo = (
+      <p className="approx-info">
+        Showing approximate SVD &nbsp;
+        <img src="deps/spinner.gif" />
+        &nbsp; Wait for precise result
+      </p>
+    );
     return (
       <div>
         <DropTarget ref="dropTarget" onFileChosen={this.onFileChosen}>
-          {this.state.svds ? <SVDView svds={this.state.svds}
-                                      width={w} height={h}
-                                      numSvs={this.state.numSvs} /> : ""}
+          {this.state.svds ?
+            <div>
+              <SVDView svds={this.state.svds}
+                       width={w} height={h}
+                       numSvs={this.state.numSvs} />
+              {this.state.approx ? approxInfo : ""}
+            </div>
+          : ""}
         </DropTarget>
         <div className="wrapper">
           {this.state.svds ? <div className="options">

@@ -59,6 +59,18 @@ h1 {
   padding: 20px;
   border-radius: 14px;
   background: #f3f3f3;
+  position: relative;
+}
+
+.approx-info {
+  background: rgba(0, 0, 0, 0.7);
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  margin: 0; padding: 4px;
+  width: 440px;
+  color: #fff;
+  text-align: center;
+  position: absolute; bottom: 20px; left: 180px;
 }
 
 .options {

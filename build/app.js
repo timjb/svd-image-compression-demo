@@ -287,11 +287,11 @@ var App = React.createClass({displayName: "App",
     calculateSvds(h, w, pxls.red, pxls.green, pxls.blue, true,
                   function (redSvdApprox, greenSvdApprox, blueSvdApprox) {
       var svdsApprox = { red: redSvdApprox, green: greenSvdApprox, blue: blueSvdApprox };
-      this.setState({ svds: svdsApprox, width: w, height: h });
+      this.setState({ svds: svdsApprox, approx: true, width: w, height: h });
       calculateSvds(h, w, pxls.red, pxls.green, pxls.blue, false,
                     function (redSvd, greenSvd, blueSvd) {
         var svds = { red: redSvd, green: greenSvd, blue: blueSvd };
-        this.setState({ svds: svds, width: w, height: h });
+        this.setState({ svds: svds, approx: false });
       }.bind(this));
     }.bind(this));
   },
@@ -318,12 +318,25 @@ var App = React.createClass({displayName: "App",
 
   render: function () {
     var w = this.state.width, h = this.state.height;
+    //var k = Math.min(w, h, 50);
+    var approxInfo = (
+      React.createElement("p", {className: "approx-info"}, 
+        "Showing approximate SVD  ", 
+        React.createElement("img", {src: "deps/spinner.gif"}), 
+        "  Wait for precise result"
+      )
+    );
     return (
       React.createElement("div", null, 
         React.createElement(DropTarget, {ref: "dropTarget", onFileChosen: this.onFileChosen}, 
-          this.state.svds ? React.createElement(SVDView, {svds: this.state.svds, 
-                                      width: w, height: h, 
-                                      numSvs: this.state.numSvs}) : ""
+          this.state.svds ?
+            React.createElement("div", null, 
+              React.createElement(SVDView, {svds: this.state.svds, 
+                       width: w, height: h, 
+                       numSvs: this.state.numSvs}), 
+              this.state.approx ? approxInfo : ""
+            )
+          : ""
         ), 
         React.createElement("div", {className: "wrapper"}, 
           this.state.svds ? React.createElement("div", {className: "options"}, 
