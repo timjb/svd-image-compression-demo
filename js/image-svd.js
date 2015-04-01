@@ -22,13 +22,13 @@ imageSvd.imageDataToPixels = function (imageData) {
 };
 
 imageSvd.svdsToImageData = function (svds, numSvs, imageData) {
-  var n = imageData.width, m = imageData.height, k = Math.min(n, m);
+  var n = imageData.width, m = imageData.height;
   var redSvd = svds.red, greenSvd = svds.green, blueSvd = svds.blue;
+  var k = redSvd.d;
+  numSvs = Math.min(numSvs, k);
   var redU = redSvd.u, redVt = redSvd.vt, redS = redSvd.s;
   var greenU = greenSvd.u, greenVt = greenSvd.vt, greenS = greenSvd.s;
   var blueU = blueSvd.u, blueVt = blueSvd.vt, blueS = blueSvd.s;
-
-  console.log(redSvd, greenSvd, blueSvd);
 
   var w = [];
 
@@ -53,8 +53,6 @@ imageSvd.svdsToImageData = function (svds, numSvs, imageData) {
       i += 4;
     }
   }
-
-  console.log(w);
 };
 
 function createZeroMatrix (m, n) {

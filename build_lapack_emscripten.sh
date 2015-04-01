@@ -31,4 +31,5 @@ rm build/main.bc
 $CC -I CLAPACK/INCLUDE -c jsapi.c -o build/jsapi.bc
 
 # build clapack.js
-$CC -O3 build/*.bc -o build/clapack.js -s TOTAL_MEMORY=24000000 -s EXPORTED_FUNCTIONS="['_svd_simple']"
+# using `--llvm-lto 1` makes the JS file about 50% smaller
+$CC -O3 build/*.bc -o build/clapack.js --llvm-lto 1 -s TOTAL_MEMORY=32000000 -s EXPORTED_FUNCTIONS="['_svd_simple','_svd_simple_approx']"

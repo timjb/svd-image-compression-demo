@@ -12,7 +12,6 @@ var calculateSvds = (function () {
   }
 
   redWorker.onmessage = function (res) {
-    console.log(res);
     redSvd = res.data;
     maybeCallback();
   };
@@ -27,12 +26,12 @@ var calculateSvds = (function () {
     maybeCallback();
   };
 
-  return function (m, n, rpx, gpx, bpx, cb) {
+  return function (m, n, rpx, gpx, bpx, approx, cb) {
     redSvd = greenSvd = blueSvd = null;
     callback = cb;
-    redWorker.postMessage({ m: m, n: n, a: rpx });
-    greenWorker.postMessage({ m: m, n: n, a: gpx });
-    blueWorker.postMessage({ m: m, n: n, a: bpx });
+    redWorker.postMessage({ m: m, n: n, a: rpx, approx: approx });
+    greenWorker.postMessage({ m: m, n: n, a: gpx, approx: approx });
+    blueWorker.postMessage({ m: m, n: n, a: bpx, approx: approx });
   };
 })();
 
@@ -285,9 +284,15 @@ var App = React.createClass({displayName: "App",
     var imageData = getImageData(img);
     var pxls = imageSvd.imageDataToPixels(imageData);
 
-    calculateSvds(h, w, pxls.red, pxls.green, pxls.blue, function (redSvd, greenSvd, blueSvd) {
-      var svds = { red: redSvd, green: greenSvd, blue: blueSvd };
-      this.setState({ svds: svds, width: w, height: h });
+    calculateSvds(h, w, pxls.red, pxls.green, pxls.blue, true,
+                  function (redSvdApprox, greenSvdApprox, blueSvdApprox) {
+      var svdsApprox = { red: redSvdApprox, green: greenSvdApprox, blue: blueSvdApprox };
+      this.setState({ svds: svdsApprox, width: w, height: h });
+      calculateSvds(h, w, pxls.red, pxls.green, pxls.blue, false,
+                    function (redSvd, greenSvd, blueSvd) {
+        var svds = { red: redSvd, green: greenSvd, blue: blueSvd };
+        this.setState({ svds: svds, width: w, height: h });
+      }.bind(this));
     }.bind(this));
   },
 
