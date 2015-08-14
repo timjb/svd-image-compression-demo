@@ -247,8 +247,8 @@ var SVSlider = React.createClass({
   },
 
   componentDidMount: function () {
-    var slider = $(this.getDOMNode());
-    slider.noUiSlider({
+    var slider = this.getDOMNode();
+    noUiSlider.create(slider, {
       // TODO: adapt to image size
       range: {
         'min': [1,1],
@@ -257,12 +257,15 @@ var SVSlider = React.createClass({
         '50%': [100,20],
         'max': [this.props.max]
       },
-      start: this.props.value
-    }).noUiSlider_pips({
-      mode: 'steps'
-    }).on('change', function () {
-      console.log(slider.val());
-      if (this.props.onChange) { this.props.onChange(slider.val()); }
+      start: this.props.value,
+      pips: {
+        mode: 'steps'
+      }
+    });
+    slider.noUiSlider.on('change', function () {
+      var val = slider.noUiSlider.get();
+      console.log(val);
+      if (this.props.onChange) { this.props.onChange(val); }
     }.bind(this));
   }
 

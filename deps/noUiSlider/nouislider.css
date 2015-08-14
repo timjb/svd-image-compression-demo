@@ -21,6 +21,7 @@
 	width: 100%;
 	height: 100%;
 	position: relative;
+	z-index: 1; /* Fix 401 */
 }
 .noUi-origin {
 	position: absolute;
@@ -37,11 +38,6 @@
 /* This class is applied to the lower origin when
    its values is > 50%. */
 	z-index: 10;
-}
-.noUi-stacking + .noUi-origin {
-/* Fix stacking order in IE7, which incorrectly
-   creates a new context for the origins. */
-	*z-index: -1;
 }
 .noUi-state-tap .noUi-origin {
 -webkit-transition: left 0.3s, top 0.3s;
@@ -160,6 +156,7 @@
 [disabled] .noUi-connect {
 	background: #B8B8B8;
 }
+[disabled].noUi-origin,
 [disabled] .noUi-handle {
 	cursor: not-allowed;
 }
