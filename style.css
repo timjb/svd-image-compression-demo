@@ -105,6 +105,34 @@ ul.images li a:hover {
   color: #555;
 }
 
+.stats {
+  position: absolute;
+  right: 10px; top: 10px; bottom: 10px;
+  color: #444;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.stats th {
+  text-align: right;
+  padding-right: 10px;
+}
+
+.label {
+  color: #666;
+  /*font-variant: small-caps;*/
+  font-weight: normal;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.hint {
+  color: #aaa;
+  margin: 0;
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+}
+
 /*
  * Hack to style the file upload button
  * see http://stackoverflow.com/questions/1084925/input-type-file-show-only-button

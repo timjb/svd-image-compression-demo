@@ -222,6 +222,15 @@ var SVDView = React.createClass({
     this.paint();
   },
 
+  shouldComponentUpdate: function (nextProps, nextState) {
+    if (nextProps.numSvs !== this.props.numSvs ||
+        nextProps.svds   !== this.props.svds) {
+      // invalidate cached image data
+      this.imageData = null;
+    }
+    return true;
+  },
+
   onMouseEnter: function () {
     this.setState({ hover: true });
   },
@@ -243,9 +252,8 @@ var SVDView = React.createClass({
     if (this.state.hover) {
       ctx.drawImage(this.props.img, 0, 0, w, h);
     } else {
-      if (!this.imageData || this.renderedSvs !== this.props.numSvs) {
+      if (!this.imageData) {
         this.imageData = ctx.getImageData(0, 0, w, h);
-        this.renderedSvs = this.props.numSvs;
         imageSvd.svdsToImageData(this.props.svds, this.props.numSvs, this.imageData);
       }
       ctx.putImageData(this.imageData, 0, 0);
@@ -382,13 +390,14 @@ var App = React.createClass({
   },
 
   onChangeSvs: function (numSvs) {
-    this.setState({ numSvs: numSvs });
+    this.setState({ numSvs: Math.round(numSvs) });
   },
 
   render: function () {
     var w = this.state.width, h = this.state.height;
     var img = this.state.img;
     var placeholderImg = this.state.placeholderImg;
+    var numSvs = this.state.numSvs;
 
     var infoBar;
     if (this.state.hover) {
@@ -406,7 +415,7 @@ var App = React.createClass({
     }
 
     var imageContainerStyle = {
-      width:  w + 200,
+      width:  w + 240,
       height: h - 20
     }
 
@@ -417,6 +426,49 @@ var App = React.createClass({
            onDrop={this.onDrop} />
     );
 
+    function showPercentageOneDecimal (p) {
+      var n = ''+Math.round(p*1000);
+      var l = n.length;
+      if (l === 1) { return '0' + n; }
+      return n.slice(0,l-1) + '.' + n.charAt(l-1);
+    }
+
+    var compressedSize = h*numSvs + numSvs + numSvs*w;
+    var stats = (
+      <div className="stats" style={{ left: w + 20 }}>
+        <table>
+          <tr>
+            <th className="label">Image size</th>
+            <td>{w} &times; {h}</td>
+          </tr>
+          <tr>
+            <th className="label">#pixels</th>
+            <td>= {w*h}</td>
+          </tr>
+        </table>
+        <p>
+          <span className="label">Uncompressed size</span><br />
+          proportional to number of pixels
+        </p>
+        <p>
+          <span className="label">Compressed size</span><br />
+          approximately proportional to <br />
+          {h}&thinsp;&times;&thinsp;{numSvs} + {numSvs} + {numSvs}&thinsp;&times;&thinsp;{w} <br />
+          = {compressedSize}
+        </p>
+        <p>
+          <span className="label">Compression ratio</span><br />
+          {compressedSize} / {w*h} = {showPercentageOneDecimal(compressedSize / (w*h))}%
+        </p>
+        <p className="hint">
+          hover to see the original picture
+        </p>
+      </div>
+    );
+
+        /*<!--<p><span className="label">Image size</span> {w} &times; {h}</p>
+        <p><span className="label">#pixels</span> = {w*h}</p>-->*/
+
     return (
       <div>
         {this.state.hover ? dropTarget : ""}
@@ -424,16 +476,17 @@ var App = React.createClass({
           {this.state.svds
             ? <SVDView svds={this.state.svds || null}
                        width={w} height={h}
-                       numSvs={this.state.numSvs}
+                       numSvs={numSvs}
                        img={img} />
             : (placeholderImg
                 ? <img width={w} height={h} src={placeholderImg} />
                 : <Placeholder width={w} height={h} img={img} />)}
           {infoBar ? <p className="info-bar">{infoBar}</p> : ""}
+          {stats}
         </div>
         <div className="wrapper">
           <div className="options">
-            <SVSlider value={this.state.numSvs}
+            <SVSlider value={numSvs}
                       onChange={this.onChangeSvs}
                       max={Math.min(w,h)} />
           </div>

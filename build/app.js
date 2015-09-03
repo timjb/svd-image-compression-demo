@@ -222,6 +222,15 @@ var SVDView = React.createClass({displayName: "SVDView",
     this.paint();
   },
 
+  shouldComponentUpdate: function (nextProps, nextState) {
+    if (nextProps.numSvs !== this.props.numSvs ||
+        nextProps.svds   !== this.props.svds) {
+      // invalidate cached image data
+      this.imageData = null;
+    }
+    return true;
+  },
+
   onMouseEnter: function () {
     this.setState({ hover: true });
   },
@@ -243,9 +252,8 @@ var SVDView = React.createClass({displayName: "SVDView",
     if (this.state.hover) {
       ctx.drawImage(this.props.img, 0, 0, w, h);
     } else {
-      if (!this.imageData || this.renderedSvs !== this.props.numSvs) {
+      if (!this.imageData) {
         this.imageData = ctx.getImageData(0, 0, w, h);
-        this.renderedSvs = this.props.numSvs;
         imageSvd.svdsToImageData(this.props.svds, this.props.numSvs, this.imageData);
       }
       ctx.putImageData(this.imageData, 0, 0);
@@ -382,13 +390,14 @@ var App = React.createClass({displayName: "App",
   },
 
   onChangeSvs: function (numSvs) {
-    this.setState({ numSvs: numSvs });
+    this.setState({ numSvs: Math.round(numSvs) });
   },
 
   render: function () {
     var w = this.state.width, h = this.state.height;
     var img = this.state.img;
     var placeholderImg = this.state.placeholderImg;
+    var numSvs = this.state.numSvs;
 
     var infoBar;
     if (this.state.hover) {
@@ -406,7 +415,7 @@ var App = React.createClass({displayName: "App",
     }
 
     var imageContainerStyle = {
-      width:  w + 200,
+      width:  w + 240,
       height: h - 20
     }
 
@@ -417,6 +426,49 @@ var App = React.createClass({displayName: "App",
            onDrop: this.onDrop})
     );
 
+    function showPercentageOneDecimal (p) {
+      var n = ''+Math.round(p*1000);
+      var l = n.length;
+      if (l === 1) { return '0' + n; }
+      return n.slice(0,l-1) + '.' + n.charAt(l-1);
+    }
+
+    var compressedSize = h*numSvs + numSvs + numSvs*w;
+    var stats = (
+      React.createElement("div", {className: "stats", style: { left: w + 20}}, 
+        React.createElement("table", null, 
+          React.createElement("tr", null, 
+            React.createElement("th", {className: "label"}, "Image size"), 
+            React.createElement("td", null, w, " × ", h)
+          ), 
+          React.createElement("tr", null, 
+            React.createElement("th", {className: "label"}, "#pixels"), 
+            React.createElement("td", null, "= ", w*h)
+          )
+        ), 
+        React.createElement("p", null, 
+          React.createElement("span", {className: "label"}, "Uncompressed size"), React.createElement("br", null), 
+          "proportional to number of pixels"
+        ), 
+        React.createElement("p", null, 
+          React.createElement("span", {className: "label"}, "Compressed size"), React.createElement("br", null), 
+          "approximately proportional to ", React.createElement("br", null), 
+          h, " × ", numSvs, " + ", numSvs, " + ", numSvs, " × ", w, " ", React.createElement("br", null), 
+          "= ", compressedSize
+        ), 
+        React.createElement("p", null, 
+          React.createElement("span", {className: "label"}, "Compression ratio"), React.createElement("br", null), 
+          compressedSize, " / ", w*h, " = ", showPercentageOneDecimal(compressedSize / (w*h)), "%"
+        ), 
+        React.createElement("p", {className: "hint"}, 
+          "hover to see the original picture"
+        )
+      )
+    );
+
+        /*<!--<p><span className="label">Image size</span> {w} &times; {h}</p>
+        <p><span className="label">#pixels</span> = {w*h}</p>-->*/
+
     return (
       React.createElement("div", null, 
         this.state.hover ? dropTarget : "", 
@@ -424,16 +476,17 @@ var App = React.createClass({displayName: "App",
           this.state.svds
             ? React.createElement(SVDView, {svds: this.state.svds || null, 
                        width: w, height: h, 
-                       numSvs: this.state.numSvs, 
+                       numSvs: numSvs, 
                        img: img})
             : (placeholderImg
                 ? React.createElement("img", {width: w, height: h, src: placeholderImg})
                 : React.createElement(Placeholder, {width: w, height: h, img: img})), 
-          infoBar ? React.createElement("p", {className: "info-bar"}, infoBar) : ""
+          infoBar ? React.createElement("p", {className: "info-bar"}, infoBar) : "", 
+          stats
         ), 
         React.createElement("div", {className: "wrapper"}, 
           React.createElement("div", {className: "options"}, 
-            React.createElement(SVSlider, {value: this.state.numSvs, 
+            React.createElement(SVSlider, {value: numSvs, 
                       onChange: this.onChangeSvs, 
                       max: Math.min(w,h)})
           ), 
