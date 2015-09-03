@@ -275,7 +275,7 @@ var Placeholder = React.createClass({
 
 function getImageData (img) {
   var canvas = document.createElement('canvas');
-  canvas.width = img.width;
+  canvas.width  = img.width;
   canvas.height = img.height;
   var ctx = canvas.getContext('2d');
   ctx.drawImage(img, 0, 0);
@@ -302,9 +302,7 @@ var App = React.createClass({
   },
 
   componentDidMount: function () {
-    document.body.ondragover  = this.onDragOver;
-    document.body.ondragleave = this.onDragLeave;
-    document.body.ondrop      = this.onDrop;
+    window.ondragover = this.onDragOver;
     this.loadImage(firstImg.src, firstImg.approxSrc);
   },
 
@@ -332,12 +330,14 @@ var App = React.createClass({
   },
 
   onDragOver: function (evt) {
-    this.setState({ hover: true });
     // without this, the drop event would not fire on the element!
     evt.preventDefault();
+    if (!this.state.hover) {
+      this.setState({ hover: true });
+    }
   },
 
-  onDragLeave: function () {
+  onDragLeave: function (evt) {
     this.setState({ hover: false });
   },
 
@@ -368,26 +368,22 @@ var App = React.createClass({
   },
 
   render: function () {
-    document.body.className = this.state.hover ? 'hover' : '';
-
     var w = this.state.width, h = this.state.height;
     var img = this.state.img;
     var placeholderImg = this.state.placeholderImg;
 
-    var infoBar = "";
-    if (!this.state.svds) {
-      infoBar = (
-        <p className="info-bar">
-          Please wait &hellip;
-        </p>
-      );
+    var infoBar;
+    if (this.state.hover) {
+      infoBar = "Drop now!";
+    } else if (!this.state.svds) {
+      infoBar = <span>Please wait &hellip;</span>;
     } else if (this.state.approx) {
       infoBar = (
-        <p className="info-bar">
+        <span>
           Showing approximate SVD &nbsp;
           <img src="deps/spinner.gif" width="16" height="16" />
           &nbsp; Computing precise result &hellip;
-        </p>
+        </span>
       );
     }
 
@@ -395,8 +391,17 @@ var App = React.createClass({
       width:  w + 200,
       height: h - 20
     }
+
+    var dropTarget = (
+      <div className="drop-target"
+           onDragOver={this.onDragOver}
+           onDragLeave={this.onDragLeave}
+           onDrop={this.onDrop} />
+    );
+
     return (
       <div>
+        {this.state.hover ? dropTarget : ""}
         <div className="image-container" style={imageContainerStyle}>
           {this.state.svds
             ? <SVDView svds={this.state.svds || null}
@@ -405,7 +410,7 @@ var App = React.createClass({
             : (placeholderImg
                 ? <img width={w} height={h} src={placeholderImg} />
                 : <Placeholder width={w} height={h} img={img} />)}
-          {infoBar}
+          {infoBar ? <p className="info-bar">{infoBar}</p> : ""}
         </div>
         <div className="wrapper">
           <div className="options">

@@ -275,7 +275,7 @@ var Placeholder = React.createClass({displayName: "Placeholder",
 
 function getImageData (img) {
   var canvas = document.createElement('canvas');
-  canvas.width = img.width;
+  canvas.width  = img.width;
   canvas.height = img.height;
   var ctx = canvas.getContext('2d');
   ctx.drawImage(img, 0, 0);
@@ -302,9 +302,7 @@ var App = React.createClass({displayName: "App",
   },
 
   componentDidMount: function () {
-    document.body.ondragover  = this.onDragOver;
-    document.body.ondragleave = this.onDragLeave;
-    document.body.ondrop      = this.onDrop;
+    window.ondragover = this.onDragOver;
     this.loadImage(firstImg.src, firstImg.approxSrc);
   },
 
@@ -332,12 +330,14 @@ var App = React.createClass({displayName: "App",
   },
 
   onDragOver: function (evt) {
-    this.setState({ hover: true });
     // without this, the drop event would not fire on the element!
     evt.preventDefault();
+    if (!this.state.hover) {
+      this.setState({ hover: true });
+    }
   },
 
-  onDragLeave: function () {
+  onDragLeave: function (evt) {
     this.setState({ hover: false });
   },
 
@@ -368,22 +368,18 @@ var App = React.createClass({displayName: "App",
   },
 
   render: function () {
-    document.body.className = this.state.hover ? 'hover' : '';
-
     var w = this.state.width, h = this.state.height;
     var img = this.state.img;
     var placeholderImg = this.state.placeholderImg;
 
-    var infoBar = "";
-    if (!this.state.svds) {
-      infoBar = (
-        React.createElement("p", {className: "info-bar"}, 
-          "Please wait …"
-        )
-      );
+    var infoBar;
+    if (this.state.hover) {
+      infoBar = "Drop now!";
+    } else if (!this.state.svds) {
+      infoBar = React.createElement("span", null, "Please wait …");
     } else if (this.state.approx) {
       infoBar = (
-        React.createElement("p", {className: "info-bar"}, 
+        React.createElement("span", null, 
           "Showing approximate SVD  ", 
           React.createElement("img", {src: "deps/spinner.gif", width: "16", height: "16"}), 
           "  Computing precise result …"
@@ -395,8 +391,17 @@ var App = React.createClass({displayName: "App",
       width:  w + 200,
       height: h - 20
     }
+
+    var dropTarget = (
+      React.createElement("div", {className: "drop-target", 
+           onDragOver: this.onDragOver, 
+           onDragLeave: this.onDragLeave, 
+           onDrop: this.onDrop})
+    );
+
     return (
       React.createElement("div", null, 
+        this.state.hover ? dropTarget : "", 
         React.createElement("div", {className: "image-container", style: imageContainerStyle}, 
           this.state.svds
             ? React.createElement(SVDView, {svds: this.state.svds || null, 
@@ -405,7 +410,7 @@ var App = React.createClass({displayName: "App",
             : (placeholderImg
                 ? React.createElement("img", {width: w, height: h, src: placeholderImg})
                 : React.createElement(Placeholder, {width: w, height: h, img: img})), 
-          infoBar
+          infoBar ? React.createElement("p", {className: "info-bar"}, infoBar) : ""
         ), 
         React.createElement("div", {className: "wrapper"}, 
           React.createElement("div", {className: "options"}, 

@@ -34,6 +34,15 @@ p {
   position: relative;
 }
 
+.drop-target {
+  position: fixed;
+  left: 0; top: 0; right: 0; bottom: 0;
+  z-index: 1000;
+  background: rgba(0, 100, 200, 0.1);
+  outline: 5px dashed #00a;
+  outline-offset: -5px;
+}
+
 .image-container > img,
 .image-container > canvas,
 .image-container > .placeholder {
@@ -43,30 +52,11 @@ p {
 }
 
 .info-bar {
-  background: rgba(0, 0, 0, 0.7);
-  border-top-left-radius: 5px;
-  border-top-right-radius: 5px;
-  margin: 0; padding: 4px;
+  background: #222;
+  margin: 0; padding: 4px 10px;
   width: 480px;
   color: #fff;
-  text-align: center;
-  position: absolute; bottom: -10px; left: 40px;
-}
-
-.drop-target {
-  background-image: url(images/placeholder-image.jpg);
-  width: 500px;
-  height: 322px;
-  margin: 0 auto;
-  padding: 20px;
-  /*background: #f3f3f3;
-  border: 6px dashed #bbb;*/
-}
-
-body.hover {
-  outline: 5px dashed #0074D9;
-  outline-offset: -5px;
-  background: #E3F7FF;
+  position: absolute; bottom: -10px; left: 0;
 }
 
 .options {
