@@ -450,4 +450,4 @@ var App = React.createClass({displayName: "App",
 
 });
 
-React.render(React.createElement(App, null), $('.app').get(0));
+React.render(React.createElement(App, null), document.getElementById('app'));
