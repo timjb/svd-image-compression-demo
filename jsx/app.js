@@ -208,9 +208,10 @@ var SVSlider = React.createClass({
 
 });
 
-var CanvasComponent = {
-  render: function () {
-    return <canvas width={this.props.width} height={this.props.height} />;
+var SVDView = React.createClass({
+
+  getInitialState: function () {
+    return { hover: false };
   },
 
   componentDidMount: function () {
@@ -219,19 +220,36 @@ var CanvasComponent = {
 
   componentDidUpdate: function () {
     this.paint();
-  }
-};
+  },
 
-var SVDView = React.createClass({
+  onMouseEnter: function () {
+    this.setState({ hover: true });
+  },
 
-  mixins: [CanvasComponent],
+  onMouseOut: function () {
+    this.setState({ hover: false });
+  },
+
+  render: function () {
+    return <canvas width={this.props.width}
+                   height={this.props.height}
+                   onMouseEnter={this.onMouseEnter}
+                   onMouseOut={this.onMouseOut} />;
+  },
 
   paint: function () {
     var w = this.props.width, h = this.props.height;
     var ctx = this.getDOMNode().getContext('2d');
-    var imageData = ctx.getImageData(0, 0, w, h);
-    imageSvd.svdsToImageData(this.props.svds, this.props.numSvs, imageData);
-    ctx.putImageData(imageData, 0, 0);
+    if (this.state.hover) {
+      ctx.drawImage(this.props.img, 0, 0, w, h);
+    } else {
+      if (!this.imageData || this.renderedSvs !== this.props.numSvs) {
+        this.imageData = ctx.getImageData(0, 0, w, h);
+        this.renderedSvs = this.props.numSvs;
+        imageSvd.svdsToImageData(this.props.svds, this.props.numSvs, this.imageData);
+      }
+      ctx.putImageData(this.imageData, 0, 0);
+    }
   }
 
 });
@@ -406,7 +424,8 @@ var App = React.createClass({
           {this.state.svds
             ? <SVDView svds={this.state.svds || null}
                        width={w} height={h}
-                       numSvs={this.state.numSvs} />
+                       numSvs={this.state.numSvs}
+                       img={img} />
             : (placeholderImg
                 ? <img width={w} height={h} src={placeholderImg} />
                 : <Placeholder width={w} height={h} img={img} />)}
