@@ -1,5 +1,10 @@
+* { margin: 0; padding: 0; }
+
+html { height: 100%; }
+
 body {
   font-family: 'Lucida Grande','Trebuchet MS','Bitstream Vera Sans',Verdana,Helvetica,sans-serif;
+  min-height: 100%;
   /*font-size: 16px;*/
 }
 
@@ -10,56 +15,30 @@ h1, h2, h3, h4 {
 
 h1 {
   font-size: 52px;
+  padding: 40px 0;
+}
+
+p {
+  margin: 10px 0;
 }
 
 .wrapper {
-  margin: 40px auto;
+  margin: 0 auto;
   width: 790px;
 }
 
-.drop-target {
-  width: 800px;
-  margin: 0 auto;
-  padding: 20px;
-  border-radius: 20px;
-  background: #f3f3f3;
-  border: 6px dashed #bbb;
-}
-
-.drop-target.hover {
-  border-color: #0074D9;
-  background: #E3F7FF;
-}
-
-.drop-text {
-  text-align: center;
-  line-height: 80px;
-}
-
-.drop-target.has-content {
-  padding: 0;
-  background: #f3f3f3;
-}
-
-.drop-target.has-content .drop-text {
-  line-height: 36px;
-  padding: 0 0 20px;
-  margin: 0;
-  background: #e0e0e0;
-  border-radius: 14px;
-}
-
-.drop-target canvas {
-  display: block;
-  margin: 0 auto;
-}
-
-.drop-target .content {
-  margin: -20px 0 0;
-  padding: 20px;
-  border-radius: 14px;
-  background: #f3f3f3;
+.image-container {
+  margin: 0 auto 40px;
+  min-width: 800px;
+  background: #eee;
   position: relative;
+}
+
+.image-container > img,
+.image-container > canvas {
+  box-shadow: 2px 2px 20px 0px #bbb;
+  display: block;
+  position: absolute; left: 0; top: -10px;
 }
 
 .approx-info {
@@ -70,7 +49,23 @@ h1 {
   width: 480px;
   color: #fff;
   text-align: center;
-  position: absolute; bottom: 20px; left: 160px;
+  position: absolute; bottom: -10px; left: 40px;
+}
+
+.drop-target {
+  background-image: url(images/placeholder-image.jpg);
+  width: 500px;
+  height: 322px;
+  margin: 0 auto;
+  padding: 20px;
+  /*background: #f3f3f3;
+  border: 6px dashed #bbb;*/
+}
+
+body.hover {
+  outline: 5px dashed #0074D9;
+  outline-offset: -5px;
+  background: #E3F7FF;
 }
 
 .options {

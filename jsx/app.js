@@ -95,72 +95,9 @@ var FileInputField = React.createClass({
   render: function () {
     return (
       <span className="file-input-button">
-        <span>choose an image file</span>
+        <span>{this.props.label}</span>
         <input ref="input" type="file" accept="image/*" className="file-input" onChange={this.onChange} />
       </span>
-    );
-  }
-
-});
-
-var DropTarget = React.createClass({
-
-  getInitialState: function () {
-    return { image: null };
-  },
-
-  onDragOver: function (evt) {
-    this.setState({ hover: true });
-    // without this, the drop event would not fire on the element!
-    evt.preventDefault();
-  },
-
-  onDragLeave: function () {
-    this.setState({ hover: false });
-  },
-
-  onDrop: function (evt) {
-    this.setState({ hover: false });
-    evt.preventDefault();
-
-    var files = evt.nativeEvent.dataTransfer.files;
-    if (!files || !files[0]) { return; }
-    this.onFileChosen(files[0]);
-  },
-
-  onFileChosen: function (file) {
-    this.setState({ error: "" });
-    if (this.props.onFileChosen) { this.props.onFileChosen(file); }
-  },
-
-  render: function () {
-    var dropText;
-    if (typeof window.FileReader === 'undefined') {
-      <p className="drop-text">
-        Dropping images is not supported by your browser. Please upgrade to a modern browser.
-      </p>
-    } else if (this.state.hover) {
-      dropText = <p className="drop-text">Drop now &hellip;</p>;
-    } else {
-      var err = this.state.error ? <span>{this.state.error} Try another file &hellip;<br /></span> : "";
-      this.fileInput = <FileInputField onChange={this.onFileChosen} />;
-      var dropText = (
-        <p className="drop-text">
-          {err}
-          Drop an image here, {this.fileInput} &hellip;
-        </p>
-      );
-    }
-
-    return (
-      <div className={"drop-target" + (this.state.hover ? " hover" : "")
-                                    + (this.props.children ? " has-content" : "")}
-           onDragOver={this.onDragOver}
-           onDragLeave={this.onDragLeave}
-           onDrop={this.onDrop}>
-        {dropText}
-        {this.props.children ? <div className="content">{this.props.children}</div> : ""}
-      </div>
     );
   }
 
@@ -209,7 +146,7 @@ var Gallery = React.createClass({
       };
     }));
   },
-  
+
   render: function () {
     var renderImage = function (img) {
       var onClick = function (evt) {
@@ -304,10 +241,27 @@ function getImageData (img) {
   return ctx.getImageData(0, 0, img.width, img.height);
 }
 
+var placeholderImg = {
+  w: 600, h: 402,
+  src: 'images/mountains_sea.jpg',
+  approxSrc: 'images/mountains_sea_5svs.jpg'
+};
+
 var App = React.createClass({
 
   getInitialState: function () {
-    return { numSvs: 5 };
+    return {
+      numSvs: 5,
+      approx: true,
+      error: ""
+    };
+  },
+
+  componentDidMount: function () {
+    document.body.ondragover  = this.onDragOver;
+    document.body.ondragleave = this.onDragLeave;
+    document.body.ondrop      = this.onDrop;
+    this.loadImage(placeholderImg.src);
   },
 
   initializeImage: function (img) {
@@ -331,9 +285,29 @@ var App = React.createClass({
     loadImage(url, this.initializeImage);
   },
 
+  onDragOver: function (evt) {
+    this.setState({ hover: true });
+    // without this, the drop event would not fire on the element!
+    evt.preventDefault();
+  },
+
+  onDragLeave: function () {
+    this.setState({ hover: false });
+  },
+
+  onDrop: function (evt) {
+    this.setState({ hover: false });
+    evt.preventDefault();
+
+    var files = evt.dataTransfer.files;
+    if (!files || !files[0]) { return; }
+    this.onFileChosen(files[0]);
+  },
+
   onFileChosen: function (file) {
+    this.setState({ error: "" });
     if (!file.type.match(/image.*/)) {
-      this.refs.dropTarget.setState({ error: "The chosen file is not an image!" });
+      this.setState({ error: "The chosen file is not an image!" });
       return;
     }
     var reader = new FileReader();
@@ -348,7 +322,10 @@ var App = React.createClass({
   },
 
   render: function () {
-    var w = this.state.width, h = this.state.height;
+    document.body.className = this.state.hover ? 'hover' : '';
+
+    var w = this.state.width  || placeholderImg.w,
+        h = this.state.height || placeholderImg.h;
     //var k = Math.min(w, h, 50);
     var approxInfo = (
       <p className="approx-info">
@@ -357,18 +334,20 @@ var App = React.createClass({
         &nbsp; Computing precise result &hellip;
       </p>
     );
+    var imageContainerStyle = {
+      width:  w + 200,
+      height: h - 20
+    }
     return (
       <div>
-        <DropTarget ref="dropTarget" onFileChosen={this.onFileChosen}>
-          {this.state.svds ?
-            <div>
-              <SVDView svds={this.state.svds}
+        <div className="image-container" style={imageContainerStyle}>
+          {this.state.svds
+            ? <SVDView svds={this.state.svds || null}
                        width={w} height={h}
                        numSvs={this.state.numSvs} />
-              {this.state.approx ? approxInfo : ""}
-            </div>
-          : ""}
-        </DropTarget>
+            : <img width={w} height={h} src={placeholderImg.approxSrc} />}
+          {this.state.approx ? approxInfo : ""}
+        </div>
         <div className="wrapper">
           {this.state.svds ? <div className="options">
                                <SVSlider value={this.state.numSvs}
@@ -376,7 +355,11 @@ var App = React.createClass({
                                          max={Math.min(w,h)} />
                              </div>
                            : ""}
-          <p>&hellip; or one of these pictures:</p>
+          {this.state.error
+            ? <p>{this.state.error} Try another file &hellip;</p>
+            : ""}
+          <p>You can <FileInputField onChange={this.onFileChosen} label="upload" /> your own pictures or drop them on this page. Here are some nice examples to try:</p>
+
           <Gallery onClick={this.loadImage} />
         </div>
       </div>
