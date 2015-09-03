@@ -262,6 +262,55 @@ var SVDView = React.createClass({
 
 });
 
+var SVSView = React.createClass({
+
+  componentDidMount: function () {
+    this.paint();
+  },
+
+  componentDidUpdate: function () {
+    this.paint();
+  },
+
+  render: function () {
+    return <canvas width={this.props.width}
+                   height={this.props.height} />;
+  },
+
+  paint: function () {
+    var w = this.props.width, h = this.props.height;
+    var ctx = this.getDOMNode().getContext('2d');
+
+    ctx.fillStyle = 'rgb(90, 90, 90)';
+    ctx.fillRect(0, 0, w, h);
+
+    var redSvs   = this.props.svds.red.s;
+    var greenSvs = this.props.svds.green.s;
+    var blueSvs  = this.props.svds.blue.s;
+    var norm = (redSvs[5] + greenSvs[5] + blueSvs[5]) / (3*h);
+    var numSvs = this.props.numSvs;
+    var d = this.props.svds.red.d;
+
+    var imageData = ctx.getImageData(0, 0, w, h);
+    var data = imageData.data;
+    for (var i = 0; i < d; i++) {
+      var redV   = Math.round(redSvs[i]   / norm);
+      var greenV = Math.round(greenSvs[i] / norm);
+      var blueV  = Math.round(blueSvs[i]  / norm);
+      var b = i < numSvs ? 30 : 0; // bonus
+      for (var j = 0; j < h; j++) {
+        var k = ((h-j)*w + i)*4;
+        data[k]   = (j < redV   ? 225 : 100) + b;
+        data[k+1] = (j < greenV ? 225 : 100) + b;
+        data[k+2] = (j < blueV  ? 225 : 100) + b;
+        data[k+3] = 255;
+      }
+    }
+    ctx.putImageData(imageData, 0, 0);
+  }
+
+});
+
 // returns a random element in [0, n)
 function random (n) {
   return Math.floor(Math.random() * n);
@@ -288,7 +337,6 @@ var Placeholder = React.createClass({
 
   render: function () {
     var color = randomColorFromImg(this.props.img);
-    console.log(color);
     var style = {
       width: this.props.width,
       height: this.props.height,
@@ -323,6 +371,7 @@ var App = React.createClass({
       placeholderImg: firstImg.approxSrc,
       numSvs: 5,
       approx: true,
+      showSvs: false,
       error: ""
     };
   },
@@ -393,6 +442,11 @@ var App = React.createClass({
     this.setState({ numSvs: Math.round(numSvs) });
   },
 
+  clickShowSvs: function (evt) {
+    evt.preventDefault();
+    this.setState({ showSvs: !this.state.showSvs });
+  },
+
   render: function () {
     var w = this.state.width, h = this.state.height;
     var img = this.state.img;
@@ -426,10 +480,25 @@ var App = React.createClass({
            onDrop={this.onDrop} />
     );
 
+    var mainImageView;
+    if (this.state.svds) {
+      if (this.state.showSvs) {
+        mainImageView = <SVSView svds={this.state.svds} numSvs={numSvs}
+                                 width={w} height={h} />;
+      } else {
+        mainImageView = <SVDView svds={this.state.svds} numSvs={numSvs}
+                                 width={w} height={h} img={img} />;
+      }
+    } else if (placeholderImg) {
+      mainImageView = <img width={w} height={h} src={placeholderImg} />;
+    } else {
+      mainImageView = <Placeholder width={w} height={h} img={img} />;
+    }
+
     function showPercentageOneDecimal (p) {
       var n = ''+Math.round(p*1000);
       var l = n.length;
-      if (l === 1) { return '0' + n; }
+      if (l === 1) { return '0.' + n; }
       return n.slice(0,l-1) + '.' + n.charAt(l-1);
     }
 
@@ -460,27 +529,22 @@ var App = React.createClass({
           <span className="label">Compression ratio</span><br />
           {compressedSize} / {w*h} = {showPercentageOneDecimal(compressedSize / (w*h))}%
         </p>
+        <p>
+          <a href="#" className={'toggle-show-svs ' + (this.state.showSvs ? 'active' : '')} onClick={this.clickShowSvs}>
+            Show singular values
+          </a>
+        </p>
         <p className="hint">
-          hover to see the original picture
+          <span className="check-box">&#9745;</span> hover to see the original picture
         </p>
       </div>
     );
-
-        /*<!--<p><span className="label">Image size</span> {w} &times; {h}</p>
-        <p><span className="label">#pixels</span> = {w*h}</p>-->*/
 
     return (
       <div>
         {this.state.hover ? dropTarget : ""}
         <div className="image-container" style={imageContainerStyle}>
-          {this.state.svds
-            ? <SVDView svds={this.state.svds || null}
-                       width={w} height={h}
-                       numSvs={numSvs}
-                       img={img} />
-            : (placeholderImg
-                ? <img width={w} height={h} src={placeholderImg} />
-                : <Placeholder width={w} height={h} img={img} />)}
+          {mainImageView}
           {infoBar ? <p className="info-bar">{infoBar}</p> : ""}
           {stats}
         </div>

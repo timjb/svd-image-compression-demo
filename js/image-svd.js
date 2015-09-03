@@ -29,6 +29,7 @@ imageSvd.svdsToImageData = function (svds, numSvs, imageData) {
   var redU = redSvd.u, redVt = redSvd.vt, redS = redSvd.s;
   var greenU = greenSvd.u, greenVt = greenSvd.vt, greenS = greenSvd.s;
   var blueU = blueSvd.u, blueVt = blueSvd.vt, blueS = blueSvd.s;
+  var data = imageData.data;
 
   var w = [];
 
@@ -46,10 +47,10 @@ imageSvd.svdsToImageData = function (svds, numSvs, imageData) {
         w.push({ x: x, y: y });
       }
 
-      imageData.data[i] = r;
-      imageData.data[i+1] = g;
-      imageData.data[i+2] = b;
-      imageData.data[i+3] = 255;
+      data[i] = r;
+      data[i+1] = g;
+      data[i+2] = b;
+      data[i+3] = 255;
       i += 4;
     }
   }

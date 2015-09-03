@@ -113,8 +113,12 @@ ul.images li a:hover {
   line-height: 18px;
 }
 
+.stats table {
+  border-spacing: 0;
+}
+
 .stats th {
-  text-align: right;
+  text-align: left;
   padding-right: 10px;
 }
 
@@ -126,11 +130,44 @@ ul.images li a:hover {
   text-transform: uppercase;
 }
 
+.toggle-show-svs {
+  margin-top: 20px;
+  text-decoration: none;
+  font-size: 11px;
+  display: inline-block;
+  color: inherit;
+  padding: 4px 10px;
+  border-style: solid;
+  border-color: #ccc #ddd #ddd #ccc;
+  border-width: 1px 2px 3px 1px;
+  background: #f3f3f3;
+  cursor: pointer;
+}
+.toggle-show-svs:hover {
+  /*background: linear-gradient(to bottom, #5972a7 5%, #637aad 100%);*/
+  background: #eee;
+}
+.toggle-show-svs.active {
+  border-color: #666 #888 #888 #666;
+  border-width: 2px 1px 1px 2px;
+  background: linear-gradient(to bottom, #aaa 0%, #ccc 100%);
+}
+.toggle-show-svs.active:hover {
+  background: linear-gradient(to bottom, #999 0%, #bbb 100%);
+}
+
+
+
 .hint {
   color: #aaa;
   margin: 0;
   position: absolute;
   bottom: 0; left: 0; right: 0;
+  font-size: 11px;
+}
+
+.check-box {
+  font-size: 15px;
 }
 
 /*
