@@ -208,7 +208,7 @@ var SVSlider = React.createClass({
 
 });
 
-var SVDView = React.createClass({
+var HoverCanvasView = {
 
   getInitialState: function () {
     return { hover: false };
@@ -220,15 +220,6 @@ var SVDView = React.createClass({
 
   componentDidUpdate: function () {
     this.paint();
-  },
-
-  shouldComponentUpdate: function (nextProps, nextState) {
-    if (nextProps.numSvs !== this.props.numSvs ||
-        nextProps.svds   !== this.props.svds) {
-      // invalidate cached image data
-      this.imageData = null;
-    }
-    return true;
   },
 
   onMouseEnter: function () {
@@ -244,6 +235,21 @@ var SVDView = React.createClass({
                    height={this.props.height}
                    onMouseEnter={this.onMouseEnter}
                    onMouseOut={this.onMouseOut} />;
+  }
+
+};
+
+var SVDView = React.createClass({
+
+  mixins: [HoverCanvasView],
+
+  shouldComponentUpdate: function (nextProps, nextState) {
+    if (nextProps.numSvs !== this.props.numSvs ||
+        nextProps.svds   !== this.props.svds) {
+      // invalidate cached image data
+      this.imageData = null;
+    }
+    return true;
   },
 
   paint: function () {
@@ -264,24 +270,16 @@ var SVDView = React.createClass({
 
 var SVSView = React.createClass({
 
-  componentDidMount: function () {
-    this.paint();
-  },
-
-  componentDidUpdate: function () {
-    this.paint();
-  },
-
-  render: function () {
-    return <canvas width={this.props.width}
-                   height={this.props.height} />;
-  },
+  mixins: [HoverCanvasView],
 
   paint: function () {
     var w = this.props.width, h = this.props.height;
     var ctx = this.getDOMNode().getContext('2d');
+    var hover = this.state.hover;
 
-    ctx.fillStyle = 'rgb(90, 90, 90)';
+    ctx.clearRect(0, 0, w, h);
+
+    ctx.fillStyle = hover ? 'rgb(90, 90, 90)' : 'rgba(90, 90, 90, 0.35)';
     ctx.fillRect(0, 0, w, h);
 
     var redSvs   = this.props.svds.red.s;
@@ -303,7 +301,7 @@ var SVSView = React.createClass({
         data[k]   = (j < redV   ? 225 : 100) + b;
         data[k+1] = (j < greenV ? 225 : 100) + b;
         data[k+2] = (j < blueV  ? 225 : 100) + b;
-        data[k+3] = 255;
+        data[k+3] = hover ? 255 : (data[k] + data[k+1] + data[k+2]) / 3;
       }
     }
     ctx.putImageData(imageData, 0, 0);
@@ -482,13 +480,8 @@ var App = React.createClass({
 
     var mainImageView;
     if (this.state.svds) {
-      if (this.state.showSvs) {
-        mainImageView = <SVSView svds={this.state.svds} numSvs={numSvs}
-                                 width={w} height={h} />;
-      } else {
-        mainImageView = <SVDView svds={this.state.svds} numSvs={numSvs}
-                                 width={w} height={h} img={img} />;
-      }
+      mainImageView = <SVDView svds={this.state.svds} numSvs={numSvs}
+                               width={w} height={h} img={img} />;
     } else if (placeholderImg) {
       mainImageView = <img width={w} height={h} src={placeholderImg} />;
     } else {
@@ -545,6 +538,10 @@ var App = React.createClass({
         {this.state.hover ? dropTarget : ""}
         <div className="image-container" style={imageContainerStyle}>
           {mainImageView}
+          {(this.state.svds && this.state.showSvs)
+            ? <SVSView svds={this.state.svds} numSvs={numSvs}
+                       width={w} height={h} />
+            : ""}
           {infoBar ? <p className="info-bar">{infoBar}</p> : ""}
           {stats}
         </div>
