@@ -208,8 +208,7 @@ var SVSlider = React.createClass({displayName: "SVSlider",
 
 });
 
-var SVDView = React.createClass({displayName: "SVDView",
-
+var CanvasComponent = {
   render: function () {
     return React.createElement("canvas", {width: this.props.width, height: this.props.height});
   },
@@ -220,7 +219,12 @@ var SVDView = React.createClass({displayName: "SVDView",
 
   componentDidUpdate: function () {
     this.paint();
-  },
+  }
+};
+
+var SVDView = React.createClass({displayName: "SVDView",
+
+  mixins: [CanvasComponent],
 
   paint: function () {
     var w = this.props.width, h = this.props.height;
@@ -228,6 +232,43 @@ var SVDView = React.createClass({displayName: "SVDView",
     var imageData = ctx.getImageData(0, 0, w, h);
     imageSvd.svdsToImageData(this.props.svds, this.props.numSvs, imageData);
     ctx.putImageData(imageData, 0, 0);
+  }
+
+});
+
+// returns a random element in [0, n)
+function random (n) {
+  return Math.floor(Math.random() * n);
+}
+
+function randomColorFromImg (img) {
+  var canvas = document.createElement('canvas');
+  canvas.width  = img.width;
+  canvas.height = img.height;
+  var ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0);
+  var r = 0, g = 0, b = 0;
+  var n = 10;
+  for (var i = 0; i < n; i++) {
+    var x = random(img.width), y = random(img.height);
+    var d = ctx.getImageData(x, y, 1, 1).data;
+    r += d[0]; g += d[1]; b += d[2];
+  }
+  var fl = Math.floor;
+  return 'rgb(' + fl(r/n) + ',' + fl(g/n) + ',' + fl(b/n) + ')';
+}
+
+var Placeholder = React.createClass({displayName: "Placeholder",
+
+  render: function () {
+    var color = randomColorFromImg(this.props.img);
+    console.log(color);
+    var style = {
+      width: this.props.width,
+      height: this.props.height,
+      background: color
+    };
+    return React.createElement("div", {className: "placeholder", style: style});
   }
 
 });
@@ -241,7 +282,7 @@ function getImageData (img) {
   return ctx.getImageData(0, 0, img.width, img.height);
 }
 
-var placeholderImg = {
+var firstImg = {
   w: 600, h: 402,
   src: 'images/mountains_sea.jpg',
   approxSrc: 'images/mountains_sea_5svs.jpg'
@@ -251,6 +292,9 @@ var App = React.createClass({displayName: "App",
 
   getInitialState: function () {
     return {
+      width: firstImg.w,
+      height: firstImg.h,
+      placeholderImg: firstImg.approxSrc,
       numSvs: 5,
       approx: true,
       error: ""
@@ -261,18 +305,19 @@ var App = React.createClass({displayName: "App",
     document.body.ondragover  = this.onDragOver;
     document.body.ondragleave = this.onDragLeave;
     document.body.ondrop      = this.onDrop;
-    this.loadImage(placeholderImg.src);
+    this.loadImage(firstImg.src, firstImg.approxSrc);
   },
 
   initializeImage: function (img) {
     var w = img.width, h = img.height;
+    this.setState({ width: w, height: h, img: img, svds: null })
     var imageData = getImageData(img);
     var pxls = imageSvd.imageDataToPixels(imageData);
 
     calculateSvds(h, w, pxls.red, pxls.green, pxls.blue, true,
                   function (redSvdApprox, greenSvdApprox, blueSvdApprox) {
       var svdsApprox = { red: redSvdApprox, green: greenSvdApprox, blue: blueSvdApprox };
-      this.setState({ svds: svdsApprox, approx: true, width: w, height: h });
+      this.setState({ svds: svdsApprox, approx: true });
       calculateSvds(h, w, pxls.red, pxls.green, pxls.blue, false,
                     function (redSvd, greenSvd, blueSvd) {
         var svds = { red: redSvd, green: greenSvd, blue: blueSvd };
@@ -281,7 +326,8 @@ var App = React.createClass({displayName: "App",
     }.bind(this));
   },
 
-  loadImage: function (url) {
+  loadImage: function (url, placeholderImg) {
+    this.setState({ placeholderImg: placeholderImg || null });
     loadImage(url, this.initializeImage);
   },
 
@@ -324,16 +370,27 @@ var App = React.createClass({displayName: "App",
   render: function () {
     document.body.className = this.state.hover ? 'hover' : '';
 
-    var w = this.state.width  || placeholderImg.w,
-        h = this.state.height || placeholderImg.h;
-    //var k = Math.min(w, h, 50);
-    var approxInfo = (
-      React.createElement("p", {className: "approx-info"}, 
-        "Showing approximate SVD  ", 
-        React.createElement("img", {src: "deps/spinner.gif"}), 
-        "  Computing precise result …"
-      )
-    );
+    var w = this.state.width, h = this.state.height;
+    var img = this.state.img;
+    var placeholderImg = this.state.placeholderImg;
+
+    var infoBar = "";
+    if (!this.state.svds) {
+      infoBar = (
+        React.createElement("p", {className: "info-bar"}, 
+          "Please wait …"
+        )
+      );
+    } else if (this.state.approx) {
+      infoBar = (
+        React.createElement("p", {className: "info-bar"}, 
+          "Showing approximate SVD  ", 
+          React.createElement("img", {src: "deps/spinner.gif", width: "16", height: "16"}), 
+          "  Computing precise result …"
+        )
+      );
+    }
+
     var imageContainerStyle = {
       width:  w + 200,
       height: h - 20
@@ -345,16 +402,17 @@ var App = React.createClass({displayName: "App",
             ? React.createElement(SVDView, {svds: this.state.svds || null, 
                        width: w, height: h, 
                        numSvs: this.state.numSvs})
-            : React.createElement("img", {width: w, height: h, src: placeholderImg.approxSrc}), 
-          this.state.approx ? approxInfo : ""
+            : (placeholderImg
+                ? React.createElement("img", {width: w, height: h, src: placeholderImg})
+                : React.createElement(Placeholder, {width: w, height: h, img: img})), 
+          infoBar
         ), 
         React.createElement("div", {className: "wrapper"}, 
-          this.state.svds ? React.createElement("div", {className: "options"}, 
-                               React.createElement(SVSlider, {value: this.state.numSvs, 
-                                         onChange: this.onChangeSvs, 
-                                         max: Math.min(w,h)})
-                             )
-                           : "", 
+          React.createElement("div", {className: "options"}, 
+            React.createElement(SVSlider, {value: this.state.numSvs, 
+                      onChange: this.onChangeSvs, 
+                      max: Math.min(w,h)})
+          ), 
           this.state.error
             ? React.createElement("p", null, this.state.error, " Try another file …")
             : "", 

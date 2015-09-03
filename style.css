@@ -35,13 +35,14 @@ p {
 }
 
 .image-container > img,
-.image-container > canvas {
+.image-container > canvas,
+.image-container > .placeholder {
   box-shadow: 2px 2px 20px 0px #bbb;
   display: block;
   position: absolute; left: 0; top: -10px;
 }
 
-.approx-info {
+.info-bar {
   background: rgba(0, 0, 0, 0.7);
   border-top-left-radius: 5px;
   border-top-right-radius: 5px;
