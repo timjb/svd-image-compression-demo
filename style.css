@@ -107,7 +107,7 @@ ul.images li a:hover {
 
 .stats {
   position: absolute;
-  right: 10px; top: 10px; bottom: 10px;
+  right: 10px; top: 20px; bottom: 20px;
   color: #444;
   font-size: 12px;
   line-height: 18px;
