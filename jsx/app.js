@@ -255,7 +255,7 @@ var SVDView = React.createClass({
   paint: function () {
     var w = this.props.width, h = this.props.height;
     var ctx = this.getDOMNode().getContext('2d');
-    if (this.state.hover) {
+    if (this.state.hover && this.props.hoverToSeeOriginal) {
       ctx.drawImage(this.props.img, 0, 0, w, h);
     } else {
       if (!this.imageData) {
@@ -370,7 +370,8 @@ var App = React.createClass({
       numSvs: 5,
       approx: true,
       showSvs: false,
-      error: ""
+      error: "",
+      hoverToSeeOriginal: true
     };
   },
 
@@ -445,6 +446,11 @@ var App = React.createClass({
     this.setState({ showSvs: !this.state.showSvs });
   },
 
+  clickHoverToSeeOriginal: function (evt) {
+    evt.preventDefault();
+    this.setState({ hoverToSeeOriginal: !this.state.hoverToSeeOriginal });
+  },
+
   render: function () {
     var w = this.state.width, h = this.state.height;
     var img = this.state.img;
@@ -481,7 +487,8 @@ var App = React.createClass({
     var mainImageView;
     if (this.state.svds) {
       mainImageView = <SVDView svds={this.state.svds} numSvs={numSvs}
-                               width={w} height={h} img={img} />;
+                               width={w} height={h} img={img}
+                               hoverToSeeOriginal={this.state.hoverToSeeOriginal} />;
     } else if (placeholderImg) {
       mainImageView = <img width={w} height={h} src={placeholderImg} />;
     } else {
@@ -523,12 +530,20 @@ var App = React.createClass({
           {compressedSize} / {w*h} = {showPercentageOneDecimal(compressedSize / (w*h))}%
         </p>
         <p>
-          <a href="#" className={'toggle-show-svs ' + (this.state.showSvs ? 'active' : '')} onClick={this.clickShowSvs}>
+          <a className={'toggle-show-svs ' + (this.state.showSvs ? 'active' : '')}
+             href="#" onClick={this.clickShowSvs}>
             Show singular values
           </a>
         </p>
         <p className="hint">
-          <span className="check-box">&#9745;</span> hover to see the original picture
+          <a className={'toggle-hover-original ' + (this.state.hoverToSeeOriginal ? 'active' : '')}
+             href="#" onClick={this.clickHoverToSeeOriginal}>
+            <span className="check-box">
+              {this.state.hoverToSeeOriginal ? <span>&#9745;</span>
+                                             : <span>&#9744;</span>}
+            </span>
+            <span className="text">hover to see the original picture</span>
+          </a>
         </p>
       </div>
     );

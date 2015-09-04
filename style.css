@@ -167,7 +167,23 @@ ul.images li a:hover {
 }
 
 .check-box {
+  display: inline-block;
+  margin-right: 4px;
   font-size: 15px;
+}
+
+.toggle-hover-original {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.toggle-hover-original .text {
+  text-decoration: line-through;
+}
+
+.toggle-hover-original.active .text {
+  text-decoration: none;
 }
 
 /*
