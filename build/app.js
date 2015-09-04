@@ -199,9 +199,12 @@ var SVSlider = React.createClass({displayName: "SVSlider",
         mode: 'steps'
       }
     });
+    slider.noUiSlider.on('update', function () {
+      var val = slider.noUiSlider.get();
+      if (this.props.onUpdate) { this.props.onUpdate(val); }
+    }.bind(this));
     slider.noUiSlider.on('change', function () {
       var val = slider.noUiSlider.get();
-      console.log(val);
       if (this.props.onChange) { this.props.onChange(val); }
     }.bind(this));
   }
@@ -244,12 +247,40 @@ var SVDView = React.createClass({displayName: "SVDView",
   mixins: [HoverCanvasView],
 
   shouldComponentUpdate: function (nextProps, nextState) {
-    if (nextProps.numSvs !== this.props.numSvs ||
-        nextProps.svds   !== this.props.svds) {
+    if (nextProps.svds !== this.props.svds) {
       // invalidate cached image data
       this.imageData = null;
+    } else if (nextProps.numSvs !== this.props.numSvs) {
+      // update cached image data
+      this.imageDataUpdates++;
+      if (nextProps.numSvs > this.props.numSvs) {
+        imageSvd.svdsToImageData(
+          this.props.svds, this.imageData,
+          this.props.numSvs, nextProps.numSvs, 1);
+      } else {
+        imageSvd.svdsToImageData(
+          this.props.svds, this.imageData,
+          nextProps.numSvs, this.props.numSvs, -1);
+      }
     }
     return true;
+  },
+
+  computeImageDataFromScratch: function () {
+    var w = this.props.width, h = this.props.height;
+    var ctx = this.getDOMNode().getContext('2d');
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, w, h);
+    this.imageData = ctx.getImageData(0, 0, w, h);
+    imageSvd.svdsToImageData(this.props.svds, this.imageData, 0, this.props.numSvs, 1);
+    this.imageDataUpdates = 0;
+  },
+
+  refreshImageData: function () {
+    if (this.imageDataUpdates >= 20) {
+      this.computeImageDataFromScratch();
+      this.paint();
+    }
   },
 
   paint: function () {
@@ -259,8 +290,7 @@ var SVDView = React.createClass({displayName: "SVDView",
       ctx.drawImage(this.props.img, 0, 0, w, h);
     } else {
       if (!this.imageData) {
-        this.imageData = ctx.getImageData(0, 0, w, h);
-        imageSvd.svdsToImageData(this.props.svds, this.props.numSvs, this.imageData);
+        this.computeImageDataFromScratch();
       }
       ctx.putImageData(this.imageData, 0, 0);
     }
@@ -443,8 +473,14 @@ var App = React.createClass({displayName: "App",
     reader.readAsDataURL(file);
   },
 
-  onChangeSvs: function (numSvs) {
+  onUpdateSvs: function (numSvs) {
     this.setState({ numSvs: Math.round(numSvs) });
+  },
+
+  onChangeSvs: function (numSvs) {
+    window.setTimeout(function () {
+      this.refs.svdView.refreshImageData();
+    }.bind(this), 400);
   },
 
   clickShowSvs: function (evt) {
@@ -492,7 +528,8 @@ var App = React.createClass({displayName: "App",
 
     var mainImageView;
     if (this.state.svds) {
-      mainImageView = React.createElement(SVDView, {svds: this.state.svds, numSvs: numSvs, 
+      mainImageView = React.createElement(SVDView, {ref: "svdView", 
+                               svds: this.state.svds, numSvs: numSvs, 
                                width: w, height: h, img: img, 
                                hoverToSeeOriginal: this.state.hoverToSeeOriginal});
     } else if (placeholderImg) {
@@ -569,6 +606,7 @@ var App = React.createClass({displayName: "App",
         React.createElement("div", {className: "wrapper"}, 
           React.createElement("div", {className: "options"}, 
             React.createElement(SVSlider, {value: numSvs, 
+                      onUpdate: this.onUpdateSvs, 
                       onChange: this.onChangeSvs, 
                       max: Math.min(w,h)})
           ), 

@@ -21,36 +21,32 @@ imageSvd.imageDataToPixels = function (imageData) {
   return { red: red, green: green, blue: blue };
 };
 
-imageSvd.svdsToImageData = function (svds, numSvs, imageData) {
+// updates the image data to include (f=1) or exclude (f=-1)
+// svs in range [l, u)
+imageSvd.svdsToImageData = function (svds, imageData, l, u, f) {
   var n = imageData.width, m = imageData.height;
   var redSvd = svds.red, greenSvd = svds.green, blueSvd = svds.blue;
   var k = redSvd.d;
-  numSvs = Math.min(numSvs, k);
+  u = Math.min(u, k);
   var redU = redSvd.u, redVt = redSvd.vt, redS = redSvd.s;
   var greenU = greenSvd.u, greenVt = greenSvd.vt, greenS = greenSvd.s;
   var blueU = blueSvd.u, blueVt = blueSvd.vt, blueS = blueSvd.s;
   var data = imageData.data;
 
-  var w = [];
-
   var i = 0;
   for (var y = 0; y < m; y++) {
     for (var x = 0; x < n; x++) {
       var r = 0, g = 0, b = 0;
-      for (var d = numSvs - 1; d >= 0; d--) {
+      for (var d = u - 1; d >= l; d--) {
         r += redU[d*m+y] * redS[d] * redVt[x*k+d];
         g += greenU[d*m+y] * greenS[d] * greenVt[x*k+d];
         b += blueU[d*m+y] * blueS[d] * blueVt[x*k+d];
       }
 
-      if (r === 0 && g === 0 && b === 0) {
-        w.push({ x: x, y: y });
-      }
-
-      data[i] = r;
-      data[i+1] = g;
-      data[i+2] = b;
-      data[i+3] = 255;
+      data[i]   += f*r;
+      data[i+1] += f*g;
+      data[i+2] += f*b;
+      //data[i+3] = 255;
       i += 4;
     }
   }
