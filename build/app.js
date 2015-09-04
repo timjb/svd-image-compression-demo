@@ -80,14 +80,21 @@ var preload = (function () {
 function loadImage (src, callback) {
   var img = new Image();
   img.onload = function () { callback(img); };
-  img.src = src;
+  if (/^http/.test(src)) {
+    console.log('cors');
+    // absolute url: use CORS proxy http://crossorigin.me
+    img.crossOrigin = 'anonymous';
+    img.src = 'http://crossorigin.me/' + src;
+  } else {
+    // relative url: load directly
+    img.src = src;
+  }
 }
 
 var FileInputField = React.createClass({displayName: "FileInputField",
 
   onChange: function () {
     var files = this.refs.input.getDOMNode().files;
-    console.log(files);
     if (!files || !files[0]) { return; }
     if (this.props.onChange) { this.props.onChange(files[0]); }
   },
