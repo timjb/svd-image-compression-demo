@@ -277,7 +277,7 @@ var SVDView = React.createClass({displayName: "SVDView",
   },
 
   refreshImageData: function () {
-    if (this.imageDataUpdates >= 20) {
+    if (this.imageDataUpdates >= 10) {
       this.computeImageDataFromScratch();
       this.paint();
     }
@@ -390,6 +390,13 @@ var firstImg = {
   approxSrc: 'images/mountains_sea_5svs.jpg'
 };
 
+function contains (list, el) {
+  for (var i = 0; i < list.length; i++) {
+    if (list[i] === el) { return true; }
+  }
+  return false;
+}
+
 var App = React.createClass({displayName: "App",
 
   getInitialState: function () {
@@ -413,13 +420,21 @@ var App = React.createClass({displayName: "App",
   initializeImage: function (img) {
     var w = img.width, h = img.height;
 
+    try {
+      var imageData = getImageData(img);
+    } catch (exc) {
+      if (exc.message.match(/(tainted|cross\-origin|insecure)/)) {
+        return window.alert("Due to browser limitations (cross-origin policy), it isn't possible use pictures dragged from other sites. You have to save the image locally before you can use it.");
+      }
+      throw exc; // rethrow
+    }
+
     if (w > 1000 || h > 1000) {
       var msg = "Your image is quite large. Computing the SVD may take a while. Continue?";
       if (!window.confirm(msg)) { return; }
     }
 
-    this.setState({ width: w, height: h, img: img, svds: null })
-    var imageData = getImageData(img);
+    this.setState({ width: w, height: h, img: img, svds: null, error: "" })
     var pxls = imageSvd.imageDataToPixels(imageData);
 
     calculateSvds(h, w, pxls.red, pxls.green, pxls.blue, true,
@@ -442,13 +457,21 @@ var App = React.createClass({displayName: "App",
   onDragOver: function (evt) {
     // without this, the drop event would not fire on the element!
     evt.preventDefault();
+
     if (!this.state.hover) {
-      this.setState({ hover: true });
+      var types = evt.dataTransfer.types;
+      this.setState({
+        hover: true,
+        error: (contains(types, 'text/uri-list') ||
+                contains(types, 'Files'))
+                 ? ""
+                 : "The dragged object is not an image!"
+      });
     }
   },
 
   onDragLeave: function (evt) {
-    this.setState({ hover: false });
+    this.setState({ hover: false, error: "" });
   },
 
   onDrop: function (evt) {
@@ -456,16 +479,21 @@ var App = React.createClass({displayName: "App",
     evt.preventDefault();
 
     var files = evt.dataTransfer.files;
-    if (!files || !files[0]) { return; }
-    this.onFileChosen(files[0]);
+    if (files && files.length > 0) {
+      this.onFileChosen(files[0]);
+    } else if (contains(evt.dataTransfer.types, 'text/uri-list')) {
+      this.loadImage(evt.dataTransfer.getData('text/uri-list'));
+    }
   },
 
   onFileChosen: function (file) {
-    this.setState({ error: "" });
-    if (!file.type.match(/image.*/)) {
-      this.setState({ error: "The chosen file is not an image!" });
+    if (!file.type.match(/^image\/.*/)) {
+      this.setState({
+        error: "The chosen file is not an image! Try another file ..."
+      });
       return;
     }
+    this.setState({ error: "" });
     var reader = new FileReader();
     reader.onload = function (evt) {
       this.loadImage(evt.target.result);
@@ -500,7 +528,9 @@ var App = React.createClass({displayName: "App",
     var numSvs = this.state.numSvs;
 
     var infoBar;
-    if (this.state.hover) {
+    if (this.state.error) {
+      infoBar = this.state.error;
+    } else if (this.state.hover) {
       infoBar = "Drop now!";
     } else if (!this.state.svds) {
       infoBar = React.createElement("span", null, "Please wait …");
@@ -520,7 +550,7 @@ var App = React.createClass({displayName: "App",
     }
 
     var dropTarget = (
-      React.createElement("div", {className: "drop-target", 
+      React.createElement("div", {className: 'drop-target ' + (this.state.error ? '' : 'active'), 
            onDragOver: this.onDragOver, 
            onDragLeave: this.onDragLeave, 
            onDrop: this.onDrop})
@@ -610,9 +640,6 @@ var App = React.createClass({displayName: "App",
                       onChange: this.onChangeSvs, 
                       max: Math.min(w,h)})
           ), 
-          this.state.error
-            ? React.createElement("p", null, this.state.error, " Try another file …")
-            : "", 
           React.createElement("p", null, "You can ", React.createElement(FileInputField, {onChange: this.onFileChosen, label: "upload"}), " your own pictures or drop them on this page. Here are some nice examples to try:"), 
 
           React.createElement(Gallery, {onClick: this.loadImage})

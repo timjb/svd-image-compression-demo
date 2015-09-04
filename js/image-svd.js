@@ -46,7 +46,6 @@ imageSvd.svdsToImageData = function (svds, imageData, l, u, f) {
       data[i]   += f*r;
       data[i+1] += f*g;
       data[i+2] += f*b;
-      //data[i+3] = 255;
       i += 4;
     }
   }
