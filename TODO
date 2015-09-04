@@ -1,4 +1,3 @@
-* Warn of long computation time when image is too big
 * More images / quiz images / carousel
 * Explaining text
-* disable hover
+* Incremental computation of image

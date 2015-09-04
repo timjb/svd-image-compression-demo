@@ -382,6 +382,12 @@ var App = React.createClass({displayName: "App",
 
   initializeImage: function (img) {
     var w = img.width, h = img.height;
+
+    if (w > 1000 || h > 1000) {
+      var msg = "Your image is quite large. Computing the SVD may take a while. Continue?";
+      if (!window.confirm(msg)) { return; }
+    }
+
     this.setState({ width: w, height: h, img: img, svds: null })
     var imageData = getImageData(img);
     var pxls = imageSvd.imageDataToPixels(imageData);
