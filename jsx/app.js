@@ -101,7 +101,7 @@ var FileInputField = React.createClass({
 
   render: function () {
     return (
-      <span className="file-input-button">
+      <span className="button file-input-button">
         <span>{this.props.label}</span>
         <input ref="input" type="file" accept="image/*" className="file-input" onChange={this.onChange} />
       </span>
@@ -176,7 +176,7 @@ var Gallery = React.createClass({
     }.bind(this);
 
     return (
-      <ul className="images">
+      <ul className="images clearfix">
         {this.getImages().map(renderImage)}
       </ul>
     );
@@ -284,7 +284,7 @@ var SVDView = React.createClass({
   },
 
   refreshImageData: function () {
-    if (this.imageDataUpdates >= 10) {
+    if (this.imageDataUpdates >= 5) {
       this.computeImageDataFromScratch();
       this.paint();
     }
@@ -610,7 +610,7 @@ var App = React.createClass({
           {compressedSize} / {w*h} = {showPercentageOneDecimal(compressedSize / (w*h))}%
         </p>
         <p>
-          <a className={'toggle-show-svs ' + (this.state.showSvs ? 'active' : '')}
+          <a className={'button toggle-show-svs ' + (this.state.showSvs ? 'active' : '')}
              href="#" onClick={this.clickShowSvs}>
             Show singular values
           </a>
@@ -647,7 +647,11 @@ var App = React.createClass({
                       onChange={this.onChangeSvs}
                       max={Math.min(w,h)} />
           </div>
-          <p>You can <FileInputField onChange={this.onFileChosen} label="upload" /> your own pictures or drop them on this page. Here are some nice examples to try:</p>
+          <p>
+            <span className="valign">You can</span>
+            <FileInputField onChange={this.onFileChosen} label="upload" />
+            <span className="valign">your own pictures or drop them on this page. Here are some examples to try:</span>
+          </p>
 
           <Gallery onClick={this.loadImage} />
         </div>

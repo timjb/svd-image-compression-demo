@@ -19,7 +19,7 @@ h1 {
 }
 
 p {
-  margin: 10px 0;
+  margin: 0 0 20px;
 }
 
 .wrapper {
@@ -38,6 +38,9 @@ p {
   position: fixed;
   left: 0; top: 0; right: 0; bottom: 0;
   z-index: 1000;
+}
+
+.drop-target.active {
   background: rgba(0, 100, 200, 0.1);
   outline: 5px dashed #00a;
   outline-offset: -5px;
@@ -61,6 +64,7 @@ p {
 
 .options {
   height: 64px;
+  margin: 0 0 20px;
 }
 
 ul.images {
@@ -69,7 +73,7 @@ ul.images {
 }
 
 /* Clearfix hack: http://www.positioniseverything.net/easyclearing.html */
-ul.images:after {
+.clearfix:after {
   content: ".";
   display: block;
   height: 0;
@@ -113,8 +117,13 @@ ul.images li a:hover {
   line-height: 18px;
 }
 
+.stats p {
+  margin: 0 0 10px;
+}
+
 .stats table {
   border-spacing: 0;
+  margin: 0 0 10px;
 }
 
 .stats th {
@@ -131,9 +140,12 @@ ul.images li a:hover {
 }
 
 .toggle-show-svs {
-  margin-top: 20px;
-  text-decoration: none;
+  margin-top: 10px;
   font-size: 11px;
+}
+
+.button {
+  text-decoration: none;
   display: inline-block;
   color: inherit;
   padding: 4px 10px;
@@ -143,22 +155,20 @@ ul.images li a:hover {
   background: #f3f3f3;
   cursor: pointer;
 }
-.toggle-show-svs:hover {
-  /*background: linear-gradient(to bottom, #5972a7 5%, #637aad 100%);*/
+.button:hover {
   background: #eee;
 }
-.toggle-show-svs.active {
+.button:active,
+.button.active {
   border-color: #666 #888 #888 #666;
   border-width: 2px 1px 1px 2px;
   background: linear-gradient(to bottom, #aaa 0%, #ccc 100%);
 }
-.toggle-show-svs.active:hover {
+.button.active:hover {
   background: linear-gradient(to bottom, #999 0%, #bbb 100%);
 }
 
-
-
-.hint {
+.stats .hint {
   color: #aaa;
   margin: 0;
   position: absolute;
@@ -186,29 +196,29 @@ ul.images li a:hover {
   text-decoration: none;
 }
 
+.valign {
+  display: inline-block;
+  padding: 4px 0 6px;
+  vertical-align: bottom;
+}
+
 /*
  * Hack to style the file upload button
  * see http://stackoverflow.com/questions/1084925/input-type-file-show-only-button
  */
 .file-input-button {
-  display: inline-block;
   position: relative;
-  cursor: pointer;
-  border: 1px solid #888;
-  border-radius: 5px;
-  line-height: 24px;
+  font-size: inherit;
+  cursor: default;
+  padding: 3px 6px;
+  margin: 0 5px;
   overflow: hidden;
-  vertical-align: middle;
+  vertical-align: bottom;
 }
 
 .file-input-button span {
   cursor: pointer;
-  margin: 0 5px;
   font-size: 14px;
-}
-
-.file-input-button:hover {
-  background: #ddd;
 }
 
 .file-input-button input {
@@ -220,7 +230,189 @@ ul.images li a:hover {
   font-size: 40px;
 }
 
+.explanation {
+  margin: 20px 0;
+  color: #444;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+/* <sub> should not produce extra line spacing */
+.explanation sub {
+  display: inline-block;
+  font-size: 10px;
+  vertical-align: -4px;
+  margin: 0 0 -6px;
+}
+
+.explanation .left-column,
+.explanation .right-column {
+  width: 380px;
+  text-align: justify;
+}
+
+.explanation .left-column { float: left; }
+.explanation .right-column { float: right; }
+
+.explanation p {
+  margin: 0 0 18px;
+}
+
+.math {
+  font-style: italic;
+  white-space: nowrap;
+}
+
+h2 { font-size: 15px; line-height: 36px; margin: 0; }
+
+.explanation a {
+  text-decoration: none;
+  color: #4682B4;
+  font-weight: bold;
+}
+
+.explanation a:hover {
+  color: #483D8B;
+}
+
+.u-color, .sigma-color, .v-color { font-weight: bold; }
+
+.schema {
+  font-family: futura, 'century gothic', 'twentieth century', calibri, verdana, helvetica, arial;
+  font-size: 20px;
+  height: 108px; width: 370px;
+  margin: 0 auto 18px;
+  position: relative;
+}
+
+.schema > * {
+  position: absolute;
+  text-align: center;
+}
+
+.matrix {
+  color: #fff;
+}
+
+.schema-b .matrix-u,
+.schema-b .matrix-sigma,
+.schema-b .matrix-v {
+  outline: 1px dashed #888;
+  outline-offset: -1px;
+  background-color: transparent;
+  color: inherit;
+}
+
+.matrix:hover,
+.matrix:hover .range,
+.matrix:hover .sv.unimportant {
+  background-image: url(images/matrix_grid.png);
+}
+
+.matrix .rows,
+.matrix .cols,
+.matrix .rows-k,
+.matrix .cols-k {
+  position: absolute;
+  font-size: 11px;
+  color: #888;
+}
+.matrix .rows,
+.matrix .cols {
+  display: none;
+}
+
+.matrix .range {
+  position: absolute;
+}
+
+.matrix .rows, .matrix .rows-k {
+  left: -12px; top: 0; bottom: 0;
+  width: 8px;
+  text-align: right;
+}
+.matrix .cols, .matrix .cols-k {
+  top: -12px; left: 0; right: 0;
+  line-height: 1em;
+}
+.matrix .rows-k { line-height: 1em; }
+.matrix .cols-k { left: 2px; text-align: left; }
+
+.matrix:hover .rows,
+.matrix:hover .cols,
+.matrix:hover .rows-k,
+.matrix:hover .cols-k {
+  display: block;
+}
+
+.matrix .rows-n {}
+.matrix .cols-n {}
+.matrix .rows-m {}
+.matrix .cols-m {}
+
+.mult-dot {
+  width: 2px; height: 2px;
+  background: #888;
+}
+
+.matrix-a {
+  top: 9px; left: 10px;
+  width: 50px; height: 90px; line-height: 90px;
+  background: #3D9970;
+}
+
+.equals {
+  top: 29px; left: 75px;
+  width: 30px; height: 50px; line-height: 50px;
+  font-size: 32px;
+}
+
+.matrix-u {
+  top: 9px; left: 120px;
+  width: 90px; height: 90px; line-height: 90px;
+}
+.matrix-u .range { width: 10px; height: 90px; }
+.matrix-u, .matrix-u .range { background: #85144b; }
+.u-color { color: #85144b; }
+
+.mult-dot-1 {
+  top: 53px; left: 220px;
+}
+
+.matrix-sigma {
+  top: 9px; left: 235px;
+  width: 50px; height: 90px; line-height: 90px;
+}
+.matrix-sigma .range { width: 10px; height: 10px; }
+.matrix-sigma, .matrix-sigma .range { background: #ccc; }
+.sigma-color { color: #FF851B; }
+
+.matrix-sigma .sv {
+  width: 5px; height: 5px;
+  background-color: #FF851B;
+  position: absolute;
+}
+.matrix-sigma .sv.unimportant {
+  background-color: #FFF0E4;
+}
+
+.mult-dot-2 {
+  top: 33px; left: 296px;
+}
+
+.matrix-v {
+  top: 9px; left: 310px;
+  width: 50px; height: 50px; line-height: 40px;
+}
+.matrix-v .range { width: 50px; height: 10px; }
+.matrix-v .rows { line-height: 50px; }
+.matrix-v, .matrix-v .range { background: #0074D9; }
+.v-color { color: #0074D9; }
+
+.center { text-align: center; }
+
 .credits {
+  margin: 20px 0 40px;
   font-size: 14px;
   color: #888;
 }

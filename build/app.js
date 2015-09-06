@@ -101,7 +101,7 @@ var FileInputField = React.createClass({displayName: "FileInputField",
 
   render: function () {
     return (
-      React.createElement("span", {className: "file-input-button"}, 
+      React.createElement("span", {className: "button file-input-button"}, 
         React.createElement("span", null, this.props.label), 
         React.createElement("input", {ref: "input", type: "file", accept: "image/*", className: "file-input", onChange: this.onChange})
       )
@@ -176,7 +176,7 @@ var Gallery = React.createClass({displayName: "Gallery",
     }.bind(this);
 
     return (
-      React.createElement("ul", {className: "images"}, 
+      React.createElement("ul", {className: "images clearfix"}, 
         this.getImages().map(renderImage)
       )
     );
@@ -284,7 +284,7 @@ var SVDView = React.createClass({displayName: "SVDView",
   },
 
   refreshImageData: function () {
-    if (this.imageDataUpdates >= 10) {
+    if (this.imageDataUpdates >= 5) {
       this.computeImageDataFromScratch();
       this.paint();
     }
@@ -610,7 +610,7 @@ var App = React.createClass({displayName: "App",
           compressedSize, " / ", w*h, " = ", showPercentageOneDecimal(compressedSize / (w*h)), "%"
         ), 
         React.createElement("p", null, 
-          React.createElement("a", {className: 'toggle-show-svs ' + (this.state.showSvs ? 'active' : ''), 
+          React.createElement("a", {className: 'button toggle-show-svs ' + (this.state.showSvs ? 'active' : ''), 
              href: "#", onClick: this.clickShowSvs}, 
             "Show singular values"
           )
@@ -647,7 +647,11 @@ var App = React.createClass({displayName: "App",
                       onChange: this.onChangeSvs, 
                       max: Math.min(w,h)})
           ), 
-          React.createElement("p", null, "You can ", React.createElement(FileInputField, {onChange: this.onFileChosen, label: "upload"}), " your own pictures or drop them on this page. Here are some nice examples to try:"), 
+          React.createElement("p", null, 
+            React.createElement("span", {className: "valign"}, "You can"), 
+            React.createElement(FileInputField, {onChange: this.onFileChosen, label: "upload"}), 
+            React.createElement("span", {className: "valign"}, "your own pictures or drop them on this page. Here are some examples to try:")
+          ), 
 
           React.createElement(Gallery, {onClick: this.loadImage})
         )
