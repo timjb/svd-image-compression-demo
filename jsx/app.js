@@ -117,38 +117,62 @@ var Gallery = React.createClass({
     return ([
       {
         name: 'cats',
-        artist: 'Jetske',
+        caption: 'By Jetske',
         source: 'https://www.flickr.com/photos/jetske/5827857531/'
       },
       {
         name: 'tree',
-        artist: 'Moyan Brenn',
+        caption: 'By Moyan Brenn',
         source: 'https://www.flickr.com/photos/aigle_dore/15061080128/'
       },
       {
         name: 'mondrian',
-        artist: 'Rael Garcia Arnes',
+        caption: 'By Rael Garcia Arnes',
         source: 'https://www.flickr.com/photos/raelga/4408707212/'
       },
       {
         name: 'nyc',
-        artist: 'Chris Isherwood',
+        caption: 'By Chris Isherwood',
         source: 'https://www.flickr.com/photos/isherwoodchris/3096255994/'
       },
       {
         name: 'girl',
-        artist: 'Elvin',
+        caption: 'By Elvin',
         source: 'https://www.flickr.com/photos/25228175@N08/5896000539/'
+      },
+      {
+        name: 'royal_stewart',
+        caption: 'The Royal Stewart tartan',
+        source: 'https://en.wikipedia.org/wiki/Royal_Stewart_tartan'
+      },
+      {
+        url: 'images/randbitmap-rdo_medium.png',
+        preview: 'images/randbitmap-rdo_small.png',
+        caption: 'Random data',
+        source: 'https://www.random.org/bitmaps/'
+      },
+      {
+        name: 'girih_pattern',
+        caption: 'Girih pattern by İnfoCan',
+        source: 'https://en.wikipedia.org/wiki/Girih#/media/File:Samarkand_Shah-i_Zinda_Tuman_Aqa_complex_cropped2.jpg'
+      },
+      {
+        name: 'manifesto_manifesto',
+        caption: 'Manifesto² by c_kick',
+        source: 'http://www.hnldesign.nl/blog/the-manifesto-manifesto/'
+      },
+      {
+        name: 'lenna',
+        caption: 'Lenna',
+        source: 'https://en.wikipedia.org/wiki/Lenna'
       }
     ].map(function (obj) {
-      var url = 'images/' + obj.name + '_medium.jpg';
-      preload(url);
       return {
         width: 150,
         height: 150,
-        url: url,
-        preview: 'images/' + obj.name + '_small.jpg',
-        artist: obj.artist,
+        url: obj.url || 'images/' + obj.name + '_medium.jpg',
+        preview: obj.preview || 'images/' + obj.name + '_small.jpg',
+        caption: obj.caption,
         source: obj.source
       };
     }));
@@ -160,15 +184,18 @@ var Gallery = React.createClass({
         if (this.props.onClick) { this.props.onClick(img.url); }
         evt.preventDefault();
       }.bind(this);
+      var onMouseOver = function () {
+        preload(img.url);
+      };
 
       return (
         <div className="image">
-          <a href={img.url} onClick={onClick}>
+          <a href={img.url} onClick={onClick} onMouseOver={onMouseOver}>
             <img width={img.width} height={img.height} src={img.preview} />
           </a>
           <p className="caption">
             <a href={img.source}>
-              By {img.artist}
+              {img.caption}
             </a>
           </p>
         </div>
@@ -183,12 +210,9 @@ var Gallery = React.createClass({
       infinite: false
     };
 
-    var imgs = this.getImages();
-    imgs = imgs.concat(imgs); // for testing of carousel
-
     return (
       <Slider {...settings}>
-        {imgs.map(renderImage)}
+        {this.getImages().map(renderImage)}
       </Slider>
     );
   }
