@@ -67,11 +67,6 @@ p {
   margin: 0 0 20px;
 }
 
-ul.images {
-  list-style: none;
-  padding: 0;
-}
-
 /* Clearfix hack: http://www.positioniseverything.net/easyclearing.html */
 .clearfix:after {
   content: ".";
@@ -81,17 +76,16 @@ ul.images {
   visibility: hidden;
 }
 
-ul.images li {
-  width: 150px;
-  margin-right: 10px;
-  float: left;
+.gallery {
+  margin: 0 -5px;
 }
 
-ul.images li:last-child {
-  margin-right: 0;
+.gallery a {
+  display: block;
+  margin: 0 5px;
 }
 
-ul.images li a:hover {
+.gallery a:hover {
   opacity: 0.8;
 }
 
@@ -411,17 +405,15 @@ h2 { font-size: 15px; line-height: 36px; margin: 0; }
 
 .center { text-align: center; }
 
-.credits {
-  margin: 20px 0 40px;
-  font-size: 14px;
+.explanation .credits {
+  margin: 36px 0 18px;
   color: #888;
 }
 
-.credits a {
-  color: #666;
-  text-decoration: none;
+.explanation .credits a {
+  color: #888;
 }
 
-.credits a:hover {
-  color: #333;
+.explanation .credits a:hover {
+  color: #666;
 }

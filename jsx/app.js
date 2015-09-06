@@ -162,7 +162,7 @@ var Gallery = React.createClass({
       }.bind(this);
 
       return (
-        <li>
+        <div className="image">
           <a href={img.url} onClick={onClick}>
             <img width={img.width} height={img.height} src={img.preview} />
           </a>
@@ -171,14 +171,25 @@ var Gallery = React.createClass({
               By {img.artist}
             </a>
           </p>
-        </li>
+        </div>
       );
     }.bind(this);
 
+    var settings = {
+      className: 'gallery',
+      slidesToShow: 5,
+      slidesToScroll: 5,
+      draggable: false,
+      infinite: false
+    };
+
+    var imgs = this.getImages();
+    imgs = imgs.concat(imgs); // for testing of carousel
+
     return (
-      <ul className="images clearfix">
-        {this.getImages().map(renderImage)}
-      </ul>
+      <Slider {...settings}>
+        {imgs.map(renderImage)}
+      </Slider>
     );
   }
 
