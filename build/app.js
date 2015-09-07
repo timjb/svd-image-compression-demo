@@ -162,9 +162,9 @@ var Gallery = React.createClass({displayName: "Gallery",
         source: 'http://www.hnldesign.nl/blog/the-manifesto-manifesto/'
       },
       {
-        name: 'lenna',
-        caption: 'Lenna',
-        source: 'https://en.wikipedia.org/wiki/Lenna'
+        name: 'skater_boy',
+        caption: 'By Chris Goldberg',
+        source: 'https://flic.kr/p/keMZvg'
       }
     ].map(function (obj) {
       return {
