@@ -156,6 +156,10 @@
           Notice how for all photographs, the graph showing the singular values looks like a hyperbola: there are only a few really large SVs and a long tail of relatively smaller SVs.
           In contrast, for the random noise image the graph of SVs looks roughly linear.
         </p>
+        <p>
+          SVD is routinely used in statistics for <a href="https://en.wikipedia.org/wiki/Principal_component_analysis">principal component analysis</a> and in numerical simulations for <a href="https://en.wikipedia.org/wiki/Model_order_reduction">reducing the order of models</a>.
+          For image compression, more sophisticated methods like <a href="https://www.youtube.com/watch?v=n_uNPbdenRs">JPG</a> that take human perception into account generally outperform compression using SVD.
+        </p>
         <h2>About this demo</h2>
         <p>
           The <a href="http://www.netlib.org/clapack/">CLAPACK</a> library provides the algorithm for computing the SVD.
@@ -166,10 +170,12 @@
           The user interface uses <a href="http://facebook.github.io/react/">React</a>, <a href="https://github.com/akiran/react-slick">react-slick</a> and <a href="http://refreshless.com/nouislider/">noUiSlider</a>.
           Thanks to the creators of all these great projects!
         </p>
-      <p class="credits">
+      </div>
+    </div>
+    <div class="credits">
+      <p>
         Built by <a href="http://github.com/timjb">Tim Baumann</a>. Fork this project on <a href="https://github.com/timjb/svd-image-compression-demo">GitHub</a>.
       </p>
-      </div>
     </div>
   </div>
 

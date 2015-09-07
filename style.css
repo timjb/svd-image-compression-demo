@@ -224,7 +224,7 @@ p {
   font-size: 40px;
 }
 
-.explanation {
+.explanation, .credits {
   margin: 20px 0;
   color: #444;
   font-size: 13px;
@@ -248,7 +248,7 @@ p {
 .explanation .left-column { float: left; }
 .explanation .right-column { float: right; }
 
-.explanation p {
+.explanation p, .credits p {
   margin: 0 0 18px;
 }
 
@@ -259,13 +259,15 @@ p {
 
 h2 { font-size: 15px; line-height: 36px; margin: 0; }
 
-.explanation a {
+.explanation a,
+.credits a {
   text-decoration: none;
   color: #4682B4;
   font-weight: bold;
 }
 
-.explanation a:hover {
+.explanation a:hover,
+.credits a:hover {
   color: #483D8B;
 }
 
@@ -370,7 +372,7 @@ h2 { font-size: 15px; line-height: 36px; margin: 0; }
 .u-color { color: #85144b; }
 
 .mult-dot-1 {
-  top: 53px; left: 220px;
+  top: 53px; left: 223px;
 }
 
 .matrix-sigma {
@@ -405,15 +407,18 @@ h2 { font-size: 15px; line-height: 36px; margin: 0; }
 
 .center { text-align: center; }
 
-.explanation .credits {
-  margin: 36px 0 18px;
+.credits {
+  margin: 18px 0;
+  color: #888;
+  text-align: center;
+}
+
+.credits a {
   color: #888;
 }
 
-.explanation .credits a {
-  color: #888;
-}
-
-.explanation .credits a:hover {
+.credits a:hover {
   color: #666;
 }
+
+.clear { clear: both; }
