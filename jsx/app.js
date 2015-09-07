@@ -669,13 +669,6 @@ var App = React.createClass({
       mainImageView = <Placeholder width={w} height={h} img={img} />;
     }
 
-    function showPercentageOneDecimal (p) {
-      var n = ''+Math.round(p*1000);
-      var l = n.length;
-      if (l === 1) { return '0.' + n; }
-      return n.slice(0,l-1) + '.' + n.charAt(l-1);
-    }
-
     var compressedSize = h*numSvs + numSvs + numSvs*w;
     var stats = (
       <div className="stats" style={{ left: w + 20 }}>
@@ -701,7 +694,7 @@ var App = React.createClass({
         </p>
         <p>
           <span className="label">Compression ratio</span><br />
-          {compressedSize} / {w*h} = {showPercentageOneDecimal(compressedSize / (w*h))}%
+          {w*h} / {compressedSize} = {(w*h / compressedSize).toFixed(2)}
         </p>
         <p>
           <a className={'button toggle-show-svs ' + (this.state.showSvs ? 'active' : '')}
