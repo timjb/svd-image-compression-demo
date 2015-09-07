@@ -293,8 +293,8 @@ h2 { font-size: 15px; line-height: 36px; margin: 0; }
 .schema-b .matrix-u,
 .schema-b .matrix-sigma,
 .schema-b .matrix-v {
-  outline: 1px dashed #888;
-  outline-offset: -1px;
+  border: 1px dashed #888;
+  margin: -1px 0 0 -1px;
   background-color: transparent;
   color: inherit;
 }
