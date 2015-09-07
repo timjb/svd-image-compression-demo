@@ -114,6 +114,11 @@ var FileInputField = React.createClass({displayName: "FileInputField",
 var Gallery = React.createClass({displayName: "Gallery",
 
   getImages: function () {
+    function quiz (obj) {
+      obj.preview = 'images/question_mark_small.jpg';
+      obj.quiz = true;
+      return obj;
+    }
     return ([
       {
         name: 'cats',
@@ -165,7 +170,37 @@ var Gallery = React.createClass({displayName: "Gallery",
         name: 'skater_boy',
         caption: 'By Chris Goldberg',
         source: 'https://flic.kr/p/keMZvg'
-      }
+      },
+      quiz({
+        // Taj Mahal
+        name: 'quiz1',
+        caption: 'By Francisco Martins',
+        source: 'https://flic.kr/p/4bpEpb'
+      }),
+      quiz({
+        // Rubik's Cube
+        name: 'quiz2',
+        caption: 'By Eleonora Gorini',
+        source: 'https://flic.kr/p/5yWPDc'
+      }),
+      quiz({
+        // Airplane
+        name: 'quiz3',
+        caption: 'By melfoody',
+        source: 'https://flic.kr/p/enTNR5'
+      }),
+      quiz({
+        // The Starry Night
+        name: 'quiz4',
+        caption: "By VvG",
+        source: 'https://goo.gl/oH2BLt'
+      }),
+      quiz({
+        // indian_peafowl
+        name: 'quiz5',
+        caption: 'By Sergiu Bacioiu',
+        source: 'https://flic.kr/p/7TdBUA'
+      })
     ].map(function (obj) {
       return {
         width: 150,
@@ -173,7 +208,8 @@ var Gallery = React.createClass({displayName: "Gallery",
         url: obj.url || 'images/' + obj.name + '_medium.jpg',
         preview: obj.preview || 'images/' + obj.name + '_small.jpg',
         caption: obj.caption,
-        source: obj.source
+        source: obj.source,
+        quiz: !!obj.quiz
       };
     }));
   },
@@ -181,8 +217,8 @@ var Gallery = React.createClass({displayName: "Gallery",
   render: function () {
     var renderImage = function (img) {
       var onClick = function (evt) {
-        if (this.props.onClick) { this.props.onClick(img.url); }
         evt.preventDefault();
+        if (this.props.onClick) {this.props.onClick(img); }
       }.bind(this);
       var onMouseOver = function () {
         preload(img.url);
@@ -225,6 +261,14 @@ var SVSlider = React.createClass({displayName: "SVSlider",
     return React.createElement("div", {className: "slider"});
   },
 
+  componentDidUpdate: function () {
+    var noUiSlider = this.getDOMNode().noUiSlider;
+    if (noUiSlider && this.props.value !== noUiSlider.get()) {
+      // hacky
+      noUiSlider.set(this.props.value);
+    }
+  },
+
   componentDidMount: function () {
     var slider = this.getDOMNode();
     noUiSlider.create(slider, {
@@ -242,12 +286,17 @@ var SVSlider = React.createClass({displayName: "SVSlider",
       }
     });
     slider.noUiSlider.on('update', function () {
-      var val = slider.noUiSlider.get();
-      if (this.props.onUpdate) { this.props.onUpdate(val); }
+      var val = Math.round(slider.noUiSlider.get());
+      if (val !== this.props.value) {
+        console.log(val, this.props.value);
+        if (this.props.onUpdate) { this.props.onUpdate(val); }
+      }
     }.bind(this));
     slider.noUiSlider.on('change', function () {
-      var val = slider.noUiSlider.get();
-      if (this.props.onChange) { this.props.onChange(val); }
+      var val = Math.round(slider.noUiSlider.get());
+      if (val !== this.props.value) {
+        if (this.props.onChange) { this.props.onChange(val); }
+      }
     }.bind(this));
   }
 
@@ -319,7 +368,7 @@ var SVDView = React.createClass({displayName: "SVDView",
   },
 
   refreshImageData: function () {
-    if (this.imageDataUpdates >= 5) {
+    if (this.imageDataUpdates >= 3) {
       this.computeImageDataFromScratch();
       this.paint();
     }
@@ -544,7 +593,7 @@ var App = React.createClass({displayName: "App",
   },
 
   onUpdateSvs: function (numSvs) {
-    this.setState({ numSvs: Math.round(numSvs) });
+    this.setState({ numSvs: numSvs });
   },
 
   onChangeSvs: function (numSvs) {
@@ -561,6 +610,16 @@ var App = React.createClass({displayName: "App",
   clickHoverToSeeOriginal: function (evt) {
     evt.preventDefault();
     this.setState({ hoverToSeeOriginal: !this.state.hoverToSeeOriginal });
+  },
+
+  onClickGallery: function (img) {
+    if (img.quiz) {
+      this.setState({
+        numSvs: 1,
+        hoverToSeeOriginal: false
+      });
+    }
+    this.loadImage(img.url);
   },
 
   render: function () {
@@ -688,7 +747,7 @@ var App = React.createClass({displayName: "App",
             React.createElement("span", {className: "valign"}, "your own pictures or drop them on this page. Here are some examples to try:")
           ), 
 
-          React.createElement(Gallery, {onClick: this.loadImage})
+          React.createElement(Gallery, {onClick: this.onClickGallery})
         )
       )
     );
