@@ -164,7 +164,7 @@
         <p>
           The <a href="http://www.netlib.org/clapack/">CLAPACK</a> library provides the algorithm for computing the SVD.
           Since CLAPACK is a C library (it is a translation of the Fortran library LAPACK) we use <a href="https://github.com/kripken/emscripten">emscripten</a> to translate it to JavaScript/asm.js.
-          The SVDs of all three color channels are computed in parallel one the client-side using <a href="https://en.wikipedia.org/wiki/Web_worker">web workers</a>.
+          The SVDs of all three color channels are computed in parallel on the client-side using <a href="https://en.wikipedia.org/wiki/Web_worker">web workers</a>.
           To provide the quick preview, we use <a href="https://research.facebook.com/blog/294071574113354/fast-randomized-svd/">a randomized algorithm</a> to compute an approximate truncated SVD with 50 singular values.
 
           The user interface uses <a href="http://facebook.github.io/react/">React</a>, <a href="https://github.com/akiran/react-slick">react-slick</a> and <a href="http://refreshless.com/nouislider/">noUiSlider</a>.

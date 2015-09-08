@@ -735,9 +735,9 @@ var App = React.createClass({
                       max={Math.min(w,h)} />
           </div>
           <p>
-            <span className="valign">You can</span>
-            <FileInputField onChange={this.onFileChosen} label="upload" />
-            <span className="valign">your own pictures or drop them on this page. Here are some examples to try:</span>
+            <span className="valign">You can compress your own images by using the</span>
+            <FileInputField onChange={this.onFileChosen} label="file picker" />
+            <span className="valign">or dropping them on this page.</span>
           </p>
 
           <Gallery onClick={this.onClickGallery} />

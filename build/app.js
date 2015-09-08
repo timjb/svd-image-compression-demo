@@ -735,9 +735,9 @@ var App = React.createClass({displayName: "App",
                       max: Math.min(w,h)})
           ), 
           React.createElement("p", null, 
-            React.createElement("span", {className: "valign"}, "You can"), 
-            React.createElement(FileInputField, {onChange: this.onFileChosen, label: "upload"}), 
-            React.createElement("span", {className: "valign"}, "your own pictures or drop them on this page. Here are some examples to try:")
+            React.createElement("span", {className: "valign"}, "You can compress your own images by using the"), 
+            React.createElement(FileInputField, {onChange: this.onFileChosen, label: "file picker"}), 
+            React.createElement("span", {className: "valign"}, "or dropping them on this page.")
           ), 
 
           React.createElement(Gallery, {onClick: this.onClickGallery})
