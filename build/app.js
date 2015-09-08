@@ -271,18 +271,39 @@ var SVSlider = React.createClass({displayName: "SVSlider",
 
   componentDidMount: function () {
     var slider = this.getDOMNode();
+
+    var maxVal = this.props.max;
+
+    var values = [];
+    for (var i = 1; i < 20; i++)       { values.push(i); }
+    for (i = 20; i < 100; i += 5)      { values.push(i); }
+    for (i = 100; i < maxVal; i += 10) { values.push(i); }
+    values.push(maxVal);
+
     noUiSlider.create(slider, {
       // TODO: adapt to image size
+      behaviour: 'snap',
       range: {
         'min': [1,1],
-        '20%': [10,2],
+        '18%': [10,2],
         '30%': [20,10],
-        '50%': [100,20],
-        'max': [this.props.max]
+        '48%': [100,20],
+        'max': [maxVal]
       },
       start: this.props.value,
       pips: {
-        mode: 'steps'
+        mode: 'values',
+        values: values,
+        density: 10,
+        filter: function (v) {
+          if (v === 1 || v === 10 || v === 20) { return 1; }
+          if (v % 100 === 0) { return 1; }
+          if (v < 10) { return 2;}
+          if (v < 20 && v % 2 === 0) { return 2; }
+          if (v < 100 && v % 10 === 0) { return 2; }
+          if (v % 20 === 0) { return 2; }
+          return 0;
+        }
       }
     });
     slider.noUiSlider.on('update', function () {
@@ -737,7 +758,7 @@ var App = React.createClass({displayName: "App",
           React.createElement("p", null, 
             React.createElement("span", {className: "valign"}, "You can compress your own images by using the"), 
             React.createElement(FileInputField, {onChange: this.onFileChosen, label: "file picker"}), 
-            React.createElement("span", {className: "valign"}, "or dropping them on this page.")
+            React.createElement("span", {className: "valign"}, "or by dropping them on this page.")
           ), 
 
           React.createElement(Gallery, {onClick: this.onClickGallery})
