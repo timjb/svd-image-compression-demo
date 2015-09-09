@@ -364,15 +364,19 @@ var SVDView = React.createClass({
       this.imageData = null;
     } else if (nextProps.numSvs !== this.props.numSvs) {
       // update cached image data
-      this.imageDataUpdates++;
       if (nextProps.numSvs > this.props.numSvs) {
+        this.imageDataUpdates++;
         imageSvd.svdsToImageData(
           this.props.svds, this.imageData,
           this.props.numSvs, nextProps.numSvs, 1);
-      } else {
+      } else if (this.props.numSvs - nextProps.numSvs < nextProps.numSvs) {
+        this.imageDataUpdates++;
         imageSvd.svdsToImageData(
           this.props.svds, this.imageData,
           nextProps.numSvs, this.props.numSvs, -1);
+      } else {
+        // it is cheaper to compute from scratch
+        this.imageData = null;
       }
     }
     return true;
