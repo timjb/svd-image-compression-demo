@@ -261,51 +261,27 @@ var SVSlider = React.createClass({displayName: "SVSlider",
     return React.createElement("div", {className: "slider"});
   },
 
-  componentDidUpdate: function () {
+  componentDidUpdate: function (prevProps, prevState) {
     var noUiSlider = this.getDOMNode().noUiSlider;
-    if (noUiSlider && this.props.value !== noUiSlider.get()) {
+    if (!noUiSlider) { return; }
+    if (this.props.value !== noUiSlider.get()) {
       // hacky
       noUiSlider.set(this.props.value);
     }
+    if (this.props.maxSvs !== prevProps.maxSvs) {
+      noUiSlider.destroy();
+      this.buildSlider();
+    }
+  },
+  
+  componentDidMount: function () {
+    this.buildSlider();
   },
 
-  componentDidMount: function () {
+  buildSlider: function () {
     var slider = this.getDOMNode();
-
-    var maxVal = this.props.max;
-
-    var values = [];
-    for (var i = 1; i < 20; i++)       { values.push(i); }
-    for (i = 20; i < 100; i += 5)      { values.push(i); }
-    for (i = 100; i < maxVal; i += 10) { values.push(i); }
-    values.push(maxVal);
-
-    noUiSlider.create(slider, {
-      // TODO: adapt to image size
-      behaviour: 'snap',
-      range: {
-        'min': [1,1],
-        '18%': [10,2],
-        '30%': [20,10],
-        '48%': [100,20],
-        'max': [maxVal]
-      },
-      start: this.props.value,
-      pips: {
-        mode: 'values',
-        values: values,
-        density: 10,
-        filter: function (v) {
-          if (v === 1 || v === 10 || v === 20) { return 1; }
-          if (v % 100 === 0) { return 1; }
-          if (v < 10) { return 2;}
-          if (v < 20 && v % 2 === 0) { return 2; }
-          if (v < 100 && v % 10 === 0) { return 2; }
-          if (v % 20 === 0) { return 2; }
-          return 0;
-        }
-      }
-    });
+    noUiSlider.create(slider, this.getSliderOptions());
+    
     slider.noUiSlider.on('update', function () {
       var val = Math.round(slider.noUiSlider.get());
       if (val !== this.props.value) {
@@ -319,6 +295,45 @@ var SVSlider = React.createClass({displayName: "SVSlider",
         if (this.props.onChange) { this.props.onChange(val); }
       }
     }.bind(this));
+  },
+  
+  getSliderOptions: function () {
+    var maxVal = this.props.max;
+    var maxSvs = this.props.maxSvs;
+
+    var values = [];
+    for (var i = 1; i < 20; i++)       { values.push(i); }
+    for (i = 20; i < 100; i += 5)      { values.push(i); }
+    for (i = 100; i < maxVal; i += 10) { values.push(i); }
+    values.push(maxVal);
+
+    return {
+      // TODO: adapt to image size
+      behaviour: 'none',
+      range: {
+        'min': [1,1],
+        '18%': [10,2],
+        '30%': [20,10],
+        '48%': [100,20],
+        'max': [maxVal]
+      },
+      start: this.props.value,
+      pips: {
+        mode: 'values',
+        values: values,
+        density: 10,
+        filter: function (v) {
+          if (v > maxSvs) { return 0; }
+          if (v === 1 || v === 10 || v === 20) { return 1; }
+          if (v % 100 === 0) { return 1; }
+          if (v < 10) { return 2;}
+          if (v < 20 && v % 2 === 0) { return 2; }
+          if (v < 100 && v % 10 === 0) { return 2; }
+          if (v % 20 === 0) { return 2; }
+          return 0;
+        }
+      }
+    };
   }
 
 });
@@ -682,16 +697,20 @@ var App = React.createClass({displayName: "App",
            onDrop: this.onDrop})
     );
 
-    var mainImageView;
+    var mainImageView, maxSvs;
     if (this.state.svds) {
       mainImageView = React.createElement(SVDView, {ref: "svdView", 
                                svds: this.state.svds, numSvs: numSvs, 
                                width: w, height: h, img: img, 
                                hoverToSeeOriginal: this.state.hoverToSeeOriginal});
-    } else if (placeholderImg) {
-      mainImageView = React.createElement("img", {width: w, height: h, src: placeholderImg});
+      maxSvs = this.state.svds.red.d;
     } else {
-      mainImageView = React.createElement(Placeholder, {width: w, height: h, img: img});
+      maxSvs = 1;
+      if (placeholderImg) {
+        mainImageView = React.createElement("img", {width: w, height: h, src: placeholderImg});
+      } else {
+        mainImageView = React.createElement(Placeholder, {width: w, height: h, img: img});
+      }
     }
 
     var compressedSize = h*numSvs + numSvs + numSvs*w;
@@ -754,7 +773,7 @@ var App = React.createClass({displayName: "App",
         ), 
         React.createElement("div", {className: "wrapper"}, 
           React.createElement("div", {className: "options"}, 
-            React.createElement(SVSlider, {value: numSvs, 
+            React.createElement(SVSlider, {value: numSvs, maxSvs: maxSvs, 
                       onUpdate: this.onUpdateSvs, 
                       onChange: this.onChangeSvs, 
                       max: Math.min(w,h)})
