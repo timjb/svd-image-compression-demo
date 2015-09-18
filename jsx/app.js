@@ -213,47 +213,53 @@ var Gallery = React.createClass({
       };
     }));
   },
+  
+  renderImage: function (img) {
+    var onClick = function (evt) {
+      evt.preventDefault();
+      if (this.props.onClick) {this.props.onClick(img); }
+    }.bind(this);
+    var onMouseOver = function () {
+      preload(img.url);
+    };
+
+    return (
+      <div className="image">
+        <a href={img.url} onClick={onClick} onMouseOver={onMouseOver}>
+          <img width={img.width} height={img.height} src={img.preview} />
+        </a>
+        <p className="caption">
+          <a href={img.source}>
+            {img.caption}
+          </a>
+        </p>
+      </div>
+    );
+  },
 
   render: function () {
-    var renderImage = function (img) {
-      var onClick = function (evt) {
-        evt.preventDefault();
-        if (this.props.onClick) {this.props.onClick(img); }
-      }.bind(this);
-      var onMouseOver = function () {
-        preload(img.url);
-      };
-
-      return (
-        <div className="image">
-          <a href={img.url} onClick={onClick} onMouseOver={onMouseOver}>
-            <img width={img.width} height={img.height} src={img.preview} />
-          </a>
-          <p className="caption">
-            <a href={img.source}>
-              {img.caption}
-            </a>
-          </p>
-        </div>
-      );
-    }.bind(this);
-
     var settings = {
+      ref: 'slider',
       className: 'gallery',
       slidesToShow: 5,
       slidesToScroll: 5,
       draggable: false,
-      infinite: false
+      infinite: false,
+      afterChange: this.props.onScroll || function () {}
     };
 
     return (
       <Slider {...settings}>
-        {this.getImages().map(renderImage)}
+        {this.getImages().map(this.renderImage)}
       </Slider>
     );
   }
 
 });
+
+function galleryShowsGuessingPage (slideNum) {
+    return slideNum === 10;
+};
 
 var SVSlider = React.createClass({
 
@@ -539,7 +545,8 @@ var App = React.createClass({
       approx: true,
       showSvs: false,
       error: "",
-      hoverToSeeOriginal: true
+      hoverToSeeOriginal: true,
+      guessingPage: false
     };
   },
 
@@ -654,12 +661,20 @@ var App = React.createClass({
 
   onClickGallery: function (img) {
     if (img.quiz) {
-      this.setState({
-        numSvs: 1,
-        hoverToSeeOriginal: false
-      });
+      this.setState({ numSvs: 1 });
     }
     this.loadImage(img.url);
+  },
+  
+  onScrollGallery: function (slideNum) {
+    var guessingPage = galleryShowsGuessingPage(slideNum);
+    var transition = this.state.guessingPage !== guessingPage;
+    if (transition) {
+      this.setState({
+        guessingPage: guessingPage,
+        hoverToSeeOriginal: !guessingPage
+      });
+    }
   },
 
   render: function () {
@@ -688,7 +703,7 @@ var App = React.createClass({
     var imageContainerStyle = {
       width:  w + 240,
       height: h - 20
-    }
+    };
 
     var dropTarget = (
       <div className={'drop-target ' + (this.state.error ? '' : 'active')}
@@ -779,12 +794,16 @@ var App = React.createClass({
                       max={Math.min(w,h)} />
           </div>
           <p>
+            {this.state.guessingPage
+              ? "How many singular values do you need to recognize the subject of these pictures?"
+              : "Change the number of singular values using the slider. Click on one of these images to compress it:"}
+          </p>
+          <Gallery ref="gallery" onClick={this.onClickGallery} onScroll={this.onScrollGallery} />
+          <p>
             <span className="valign">You can compress your own images by using the</span>
             <FileInputField onChange={this.onFileChosen} label="file picker" />
             <span className="valign">or by dropping them on this page.</span>
           </p>
-
-          <Gallery onClick={this.onClickGallery} />
         </div>
       </div>
     );

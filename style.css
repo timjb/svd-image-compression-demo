@@ -27,6 +27,8 @@ p {
   width: 790px;
 }
 
+.app { margin: 0 0 60px; }
+
 .image-container {
   margin: 0 auto 40px;
   min-width: 800px;
