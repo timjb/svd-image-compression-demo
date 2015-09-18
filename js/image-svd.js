@@ -50,34 +50,3 @@ imageSvd.svdsToImageData = function (svds, imageData, l, u, f) {
     }
   }
 };
-
-function createZeroMatrix (m, n) {
-  var mat = [];
-  for (var y = 0; y < m; y++) {
-    mat[y] = new Float32Array(n);
-  }
-  return mat;
-}
-
-imageSvd.svd = function (a, m, n) {
-  var d = Math.max(m, n);
-  var s = new Float32Array(d); // will contain the singular values
-  var v = createZeroMatrix(d, d);
-
-  var u = createZeroMatrix(d, d);
-  for (var y = 0; y < m; y++) {
-    for (var x = 0; x < n; x++) {
-      u[y][x] = a[y][x];
-    }
-  }
-
-  SVD.svdcmp(u, m, n, s, v);
-  return { u: u, s: s, v: v };
-};
-
-/*
-function svd (a, m, n) {
-  var res = numeric.svd(a);
-  return { u: res.U, s: res.S, v: res.V };
-}
-*/
