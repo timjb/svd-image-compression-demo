@@ -23,17 +23,18 @@ imageSvd.imageDataToPixels = function (imageData) {
 
 // updates the image data to include (f=1) or exclude (f=-1)
 // svs in range [l, u)
-imageSvd.svdsToImageData = function (svds, imageData, l, u, f) {
-  var n = imageData.width, m = imageData.height;
+imageSvd.multiplySvds = function (svds, products, l, u, f) {
+  var timerName = "multiplySvds" + (Math.round(Math.random() * 100));
+  console.time(timerName);
+  
   var redSvd = svds.red, greenSvd = svds.green, blueSvd = svds.blue;
-  var d = redSvd.d;
+  var n = redSvd.n, m = redSvd.m, d = redSvd.d;
   u = Math.min(u, d);
   var redU = redSvd.u, redVt = redSvd.vt, redS = redSvd.s;
   var greenU = greenSvd.u, greenVt = greenSvd.vt, greenS = greenSvd.s;
   var blueU = blueSvd.u, blueVt = blueSvd.vt, blueS = blueSvd.s;
-  var data = imageData.data;
+  var redProd = products.red, greenProd = products.green, blueProd = products.blue;
 
-  var i = 0;
   for (var y = 0; y < m; y++) {
     for (var x = 0; x < n; x++) {
       var r = 0, g = 0, b = 0;
@@ -43,10 +44,12 @@ imageSvd.svdsToImageData = function (svds, imageData, l, u, f) {
         b += blueU[k*m+y] * blueS[k] * blueVt[x*d+k];
       }
 
-      data[i]   += f*r;
-      data[i+1] += f*g;
-      data[i+2] += f*b;
-      i += 4;
+      var i = y*n + x;
+      redProd[i]   += r*f;
+      greenProd[i] += g*f;
+      blueProd[i]  += b*f;
     }
   }
+  
+  console.timeEnd(timerName);
 };

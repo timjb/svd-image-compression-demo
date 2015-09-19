@@ -1,3 +1,30 @@
+function toFloat32Array (f64A) {
+  //return new Float32Array(f64A); // doesn't work in Firefox
+  var l = f64A.length;
+  var f32A = new Float32Array(l);
+  for (var i = 0; i < l; i++) {
+    f32A[i] = f64A[i];
+  }
+  return f32A;
+}
+
+function toFloat32Svd (svd) {
+  return {
+    u:  toFloat32Array(svd.u),
+    s:  toFloat32Array(svd.s),
+    vt: toFloat32Array(svd.vt),
+    d: svd.d, m: svd.m, n: svd.n
+  };
+}
+
+function toFloat32Svds (svds) {
+  return {
+    red:   toFloat32Svd(svds.red),
+    green: toFloat32Svd(svds.green),
+    blue:  toFloat32Svd(svds.blue)
+  };
+}
+
 var computeSvds = (function () {
   var state = { red: {}, green: {}, blue: {} };
 
@@ -386,51 +413,75 @@ var SVDView = React.createClass({
     if (nextProps.svds !== this.props.svds) {
       // invalidate cached image data
       this.imageData = null;
+      this.products = null;
     } else if (nextProps.numSvs !== this.props.numSvs) {
       // update cached image data
       if (nextProps.numSvs > this.props.numSvs) {
         this.imageDataUpdates++;
-        imageSvd.svdsToImageData(
-          this.props.svds, this.imageData,
+        imageSvd.multiplySvds(
+          this.props.svds, this.products,
           this.props.numSvs, nextProps.numSvs, 1);
       } else if (this.props.numSvs - nextProps.numSvs < nextProps.numSvs) {
         this.imageDataUpdates++;
-        imageSvd.svdsToImageData(
-          this.props.svds, this.imageData,
+        imageSvd.multiplySvds(
+          this.props.svds, this.products,
           nextProps.numSvs, this.props.numSvs, -1);
       } else {
         // it is cheaper to compute from scratch
-        this.imageData = null;
+        this.products = null;
       }
     }
     return true;
   },
+  
+  initProducts: function () {
+    var n = this.props.width, m = this.props.height;
+    this.products = {
+      red:   new Float32Array(m*n),
+      green: new Float32Array(m*n),
+      blue:  new Float32Array(m*n)
+    };
+  },
 
-  computeImageDataFromScratch: function () {
-    var w = this.props.width, h = this.props.height;
-    var ctx = this.getDOMNode().getContext('2d');
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, w, h);
-    this.imageData = ctx.getImageData(0, 0, w, h);
-    imageSvd.svdsToImageData(this.props.svds, this.imageData, 0, this.props.numSvs, 1);
+  computeProductsFromScratch: function () {
+    imageSvd.multiplySvds(this.props.svds, this.products, 0, this.props.numSvs, 1);
     this.imageDataUpdates = 0;
   },
 
   refreshImageData: function () {
-    if (this.imageDataUpdates >= 3) {
+    if (this.imageDataUpdates >= 20) {
       this.computeImageDataFromScratch();
       this.paint();
     }
   },
 
   paint: function () {
-    var w = this.props.width, h = this.props.height;
+    var n = this.props.width, m = this.props.height;
     var ctx = this.getDOMNode().getContext('2d');
     if (this.state.hover && this.props.hoverToSeeOriginal) {
-      ctx.drawImage(this.props.img, 0, 0, w, h);
+      ctx.drawImage(this.props.img, 0, 0, n, m);
     } else {
       if (!this.imageData) {
-        this.computeImageDataFromScratch();
+        // storing image data saves ~10ms
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, n, m);
+        this.imageData = ctx.getImageData(0, 0, n, m);
+      }
+      if (!this.products) {
+        this.initProducts();
+        this.computeProductsFromScratch();
+      }
+      var data = this.imageData.data;
+      var redProd = this.products.red,
+          greenProd = this.products.green,
+          blueProd = this.products.blue;
+      for (var y = 0; y < m; y++) {
+        for (var x = 0; x < n; x++) {
+          var i = y*n + x, j = 4*i;
+          data[j]   = redProd[i];
+          data[j+1] = greenProd[i];
+          data[j+2] = blueProd[i];
+        }
       }
       ctx.putImageData(this.imageData, 0, 0);
     }
@@ -579,7 +630,7 @@ var App = React.createClass({
     var pxls = imageSvd.imageDataToPixels(imageData);
     
     computeSvds(h, w, pxls, function (svds) {
-      this.setState({ svds: svds, approx: svds.approx });
+      this.setState({ svds: toFloat32Svds(svds), approx: svds.approx });
     }.bind(this));
   },
 
