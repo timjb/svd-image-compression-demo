@@ -1,65 +1,69 @@
-var calculateSvds = (function () {
+var computeSvds = (function () {
+  var state = { red: {}, green: {}, blue: {} };
+
   function start () { return new Worker('js/svd-worker.js'); }
 
-  var callback = null;
-  function maybeCallback () {
-    if (redSvd && greenSvd && blueSvd && callback) {
-      var cb = callback;
-      callback = null;
-      cb(redSvd, greenSvd, blueSvd);
-      redSvd = greenSvd = blueSvd = null;
-    }
-  }
-
-  var redWorker, redSvd;
-  function initRedWorker () {
-    if (redWorker) { redWorker.terminate(); }
-    redWorker = start();
-    redWorker.onmessage = function (res) {
-      redSvd = res.data;
-      maybeCallback();
+  function initWorker (color) {
+    var s = state[color];
+    s.computingSvd = false;
+    if (s.worker) { s.worker.terminate(); }
+    s.worker = start();
+    s.worker.onmessage = function (res) {
+      s.onmessage(res);
     };
   }
 
-  var greenWorker, greenSvd;
-  function initGreenWorker () {
-    if (greenWorker) { greenWorker.terminate(); }
-    greenWorker = start();
-    greenWorker.onmessage = function (res) {
-      greenSvd = res.data;
-      maybeCallback();
-    };
-  }
+  initWorker('red');
+  initWorker('green');
+  initWorker('blue');
 
-  var blueWorker, blueSvd;
-  function initBlueWorker () {
-    if (blueWorker) { blueWorker.terminate(); }
-    blueWorker = start();
-    blueWorker.onmessage = function (res) {
-      blueSvd = res.data;
-      maybeCallback();
-    };
-  }
-
-  initRedWorker();
-  initGreenWorker();
-  initBlueWorker();
-
-  return function (m, n, rpx, gpx, bpx, approx, cb) {
+  return function (m, n, channels, cb) {
     /* It would be great if the web worker API allowed one to simply abort the
        current task a worker is executing by e.g. throwing an exception in the
        worker. With this, all the initialization and memory allocation of
        Emscripten associated with a complete restart could be avoided. */
-    if (callback) {
-      if (!redSvd)   { initRedWorker(); }
-      if (!greenSvd) { initGreenWorker(); }
-      if (!blueSvd)  { initBlueWorker(); }
+       
+    var finishedApprox = 0;
+    var finishedFull = 0;
+    
+    function helper (color) {
+      var s = state[color];
+      if (s.computingSvd) { initWorker(color); }
+      s.computingSvd = true;
+      var buffer = channels[color].buffer;
+      s.worker.postMessage( { msg: 'set-input', a: buffer, m: m, n: n }, [buffer]);
+      s.onmessage = function (msg) {
+        s.approxSvd = msg.data;
+        finishedApprox++;
+        if (finishedApprox === 3) {
+          cb({
+            red: state.red.approxSvd,
+            green: state.green.approxSvd,
+            blue: state.blue.approxSvd,
+            approx: true
+          });
+        }
+        s.onmessage = function (msg) {
+          s.fullSvd = msg.data;
+          finishedFull++;
+          if (finishedFull === 3) {
+            cb({
+              red: state.red.fullSvd,
+              green: state.green.fullSvd,
+              blue: state.blue.fullSvd,
+              approx: false
+            });
+          }
+          s.computingSvd = false;
+        };
+        s.worker.postMessage({ msg: 'compute-svd', approx: false });
+      };
+      s.worker.postMessage({ msg: 'compute-svd', approx: true });
     }
-    redSvd = greenSvd = blueSvd = null;
-    callback = cb;
-    redWorker.postMessage({ m: m, n: n, a: rpx, approx: approx });
-    greenWorker.postMessage({ m: m, n: n, a: gpx, approx: approx });
-    blueWorker.postMessage({ m: m, n: n, a: bpx, approx: approx });
+    
+    helper('red');
+    helper('green');
+    helper('blue');
   };
 })();
 
@@ -291,7 +295,6 @@ var SVSlider = React.createClass({
     slider.noUiSlider.on('update', function () {
       var val = Math.round(slider.noUiSlider.get());
       if (val !== this.props.value) {
-        console.log(val, this.props.value);
         if (this.props.onUpdate) { this.props.onUpdate(val); }
       }
     }.bind(this));
@@ -315,7 +318,7 @@ var SVSlider = React.createClass({
 
     return {
       // TODO: adapt to image size
-      behaviour: 'none',
+      behaviour: 'snap',
       range: {
         'min': [1,1],
         '18%': [10,2],
@@ -574,16 +577,9 @@ var App = React.createClass({
 
     this.setState({ width: w, height: h, img: img, svds: null, error: "" })
     var pxls = imageSvd.imageDataToPixels(imageData);
-
-    calculateSvds(h, w, pxls.red, pxls.green, pxls.blue, true,
-                  function (redSvdApprox, greenSvdApprox, blueSvdApprox) {
-      var svdsApprox = { red: redSvdApprox, green: greenSvdApprox, blue: blueSvdApprox };
-      this.setState({ svds: svdsApprox, approx: true });
-      calculateSvds(h, w, pxls.red, pxls.green, pxls.blue, false,
-                    function (redSvd, greenSvd, blueSvd) {
-        var svds = { red: redSvd, green: greenSvd, blue: blueSvd };
-        this.setState({ svds: svds, approx: false });
-      }.bind(this));
+    
+    computeSvds(h, w, pxls, function (svds) {
+      this.setState({ svds: svds, approx: svds.approx });
     }.bind(this));
   },
 
