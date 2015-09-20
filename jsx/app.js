@@ -193,9 +193,10 @@ var Gallery = React.createClass({
         source: 'https://en.wikipedia.org/wiki/Girih#/media/File:Samarkand_Shah-i_Zinda_Tuman_Aqa_complex_cropped2.jpg'
       },
       {
-        name: 'manifesto_manifesto',
-        caption: 'Manifesto² by c_kick',
-        source: 'http://www.hnldesign.nl/blog/the-manifesto-manifesto/'
+        caption: 'Made with the KC-O-M',
+        url: 'images/keep-calm-and-use-svd_medium.png',
+        preview: 'images/keep-calm-and-use-svd_small.png',
+        source: 'http://www.keepcalm-o-matic.co.uk/'
       },
       {
         name: 'skater_boy',
