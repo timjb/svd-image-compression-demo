@@ -1,3 +1,45 @@
+// Copied from underscore.js (https://github.com/jashkenas/underscore)
+//
+// Returns a function, that, as long as it continues to be invoked, will not
+// be triggered. The function will be called after it stops being called for
+// N milliseconds. If `immediate` is passed, trigger the function on the
+// leading edge, instead of the trailing.
+function debounce (func, wait, immediate) {
+  var getNow = Date.now || function() {
+    return new Date().getTime();
+  };
+  
+  var timeout, args, context, timestamp, result;
+
+  var later = function() {
+    var last = getNow() - timestamp;
+
+    if (last < wait && last >= 0) {
+      timeout = setTimeout(later, wait - last);
+    } else {
+      timeout = null;
+      if (!immediate) {
+        result = func.apply(context, args);
+        if (!timeout) context = args = null;
+      }
+    }
+  };
+
+  return function() {
+    context = this;
+    args = arguments;
+    timestamp = getNow();
+    var callNow = immediate && !timeout;
+    if (!timeout) timeout = setTimeout(later, wait);
+    if (callNow) {
+      result = func.apply(context, args);
+      context = args = null;
+    }
+
+    return result;
+  };
+}
+
 function toFloat32Array (f64A) {
   //return new Float32Array(f64A); // doesn't work in Firefox
   var l = f64A.length;
@@ -320,18 +362,18 @@ var SVSlider = React.createClass({
     var slider = this.getDOMNode();
     noUiSlider.create(slider, this.getSliderOptions());
     
-    slider.noUiSlider.on('update', function () {
+    slider.noUiSlider.on('update', debounce(function () {
       var val = Math.round(slider.noUiSlider.get());
       if (val !== this.props.value) {
         if (this.props.onUpdate) { this.props.onUpdate(val); }
       }
-    }.bind(this));
-    slider.noUiSlider.on('change', function () {
+    }.bind(this), 50));
+    slider.noUiSlider.on('change', debounce(function () {
       var val = Math.round(slider.noUiSlider.get());
       if (val !== this.props.value) {
         if (this.props.onChange) { this.props.onChange(val); }
       }
-    }.bind(this));
+    }.bind(this), 50));
   },
   
   getSliderOptions: function () {
