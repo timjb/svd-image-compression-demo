@@ -167,7 +167,7 @@ function loadImage (src, callback) {
 var FileInputField = React.createClass({displayName: "FileInputField",
 
   onChange: function () {
-    var files = this.refs.input.getDOMNode().files;
+    var files = ReactDOM.findDOMNode(this.refs.input).files;
     if (!files || !files[0]) { return; }
     if (this.props.onChange) { this.props.onChange(files[0]); }
   },
@@ -275,8 +275,9 @@ var Gallery = React.createClass({displayName: "Gallery",
         caption: 'By Sergiu Bacioiu',
         source: 'https://flic.kr/p/7TdBUA'
       })
-    ].map(function (obj) {
+    ].map(function (obj, i) {
       return {
+        name: obj.name || 'image-'+i,
         width: 150,
         height: 150,
         url: obj.url || 'images/' + obj.name + '_medium.jpg',
@@ -298,7 +299,7 @@ var Gallery = React.createClass({displayName: "Gallery",
     };
 
     return (
-      React.createElement("div", {className: "image"}, 
+      React.createElement("div", {className: "image", key: img.name}, 
         React.createElement("a", {href: img.url, onClick: onClick, onMouseOver: onMouseOver}, 
           React.createElement("img", {width: img.width, height: img.height, src: img.preview})
         ), 
@@ -342,7 +343,7 @@ var SVSlider = React.createClass({displayName: "SVSlider",
   },
 
   componentDidUpdate: function (prevProps, prevState) {
-    var noUiSlider = this.getDOMNode().noUiSlider;
+    var noUiSlider = ReactDOM.findDOMNode(this).noUiSlider;
     if (!noUiSlider) { return; }
     if (this.props.value !== noUiSlider.get()) {
       // hacky
@@ -359,7 +360,7 @@ var SVSlider = React.createClass({displayName: "SVSlider",
   },
 
   buildSlider: function () {
-    var slider = this.getDOMNode();
+    var slider = ReactDOM.findDOMNode(this);
     noUiSlider.create(slider, this.getSliderOptions());
     
     slider.noUiSlider.on('update', debounce(function () {
@@ -500,7 +501,7 @@ var SVDView = React.createClass({displayName: "SVDView",
 
   paint: function () {
     var n = this.props.width, m = this.props.height;
-    var ctx = this.getDOMNode().getContext('2d');
+    var ctx = ReactDOM.findDOMNode(this).getContext('2d');
     if (this.state.hover && this.props.hoverToSeeOriginal) {
       ctx.drawImage(this.props.img, 0, 0, n, m);
     } else {
@@ -538,7 +539,7 @@ var SVSView = React.createClass({displayName: "SVSView",
 
   paint: function () {
     var w = this.props.width, h = this.props.height;
-    var ctx = this.getDOMNode().getContext('2d');
+    var ctx = ReactDOM.findDOMNode(this).getContext('2d');
     var hover = this.state.hover;
 
     ctx.clearRect(0, 0, w, h);
@@ -822,13 +823,15 @@ var App = React.createClass({displayName: "App",
     var stats = (
       React.createElement("div", {className: "stats", style: { left: w + 20}}, 
         React.createElement("table", null, 
-          React.createElement("tr", null, 
-            React.createElement("th", {className: "label"}, "Image size"), 
-            React.createElement("td", null, w, " × ", h)
-          ), 
-          React.createElement("tr", null, 
-            React.createElement("th", {className: "label"}, "#pixels"), 
-            React.createElement("td", null, "= ", w*h)
+          React.createElement("tbody", null, 
+            React.createElement("tr", null, 
+              React.createElement("th", {className: "label"}, "Image size"), 
+              React.createElement("td", null, w, " × ", h)
+            ), 
+            React.createElement("tr", null, 
+              React.createElement("th", {className: "label"}, "#pixels"), 
+              React.createElement("td", null, "= ", w*h)
+            )
           )
         ), 
         React.createElement("p", null, 
@@ -901,4 +904,4 @@ var App = React.createClass({displayName: "App",
 
 });
 
-React.render(React.createElement(App, null), document.getElementById('app'));
+ReactDOM.render(React.createElement(App, null), document.getElementById('app'));

@@ -167,7 +167,7 @@ function loadImage (src, callback) {
 var FileInputField = React.createClass({
 
   onChange: function () {
-    var files = this.refs.input.getDOMNode().files;
+    var files = ReactDOM.findDOMNode(this.refs.input).files;
     if (!files || !files[0]) { return; }
     if (this.props.onChange) { this.props.onChange(files[0]); }
   },
@@ -275,8 +275,9 @@ var Gallery = React.createClass({
         caption: 'By Sergiu Bacioiu',
         source: 'https://flic.kr/p/7TdBUA'
       })
-    ].map(function (obj) {
+    ].map(function (obj, i) {
       return {
+        name: obj.name || 'image-'+i,
         width: 150,
         height: 150,
         url: obj.url || 'images/' + obj.name + '_medium.jpg',
@@ -298,7 +299,7 @@ var Gallery = React.createClass({
     };
 
     return (
-      <div className="image">
+      <div className="image" key={img.name}>
         <a href={img.url} onClick={onClick} onMouseOver={onMouseOver}>
           <img width={img.width} height={img.height} src={img.preview} />
         </a>
@@ -342,7 +343,7 @@ var SVSlider = React.createClass({
   },
 
   componentDidUpdate: function (prevProps, prevState) {
-    var noUiSlider = this.getDOMNode().noUiSlider;
+    var noUiSlider = ReactDOM.findDOMNode(this).noUiSlider;
     if (!noUiSlider) { return; }
     if (this.props.value !== noUiSlider.get()) {
       // hacky
@@ -359,7 +360,7 @@ var SVSlider = React.createClass({
   },
 
   buildSlider: function () {
-    var slider = this.getDOMNode();
+    var slider = ReactDOM.findDOMNode(this);
     noUiSlider.create(slider, this.getSliderOptions());
     
     slider.noUiSlider.on('update', debounce(function () {
@@ -500,7 +501,7 @@ var SVDView = React.createClass({
 
   paint: function () {
     var n = this.props.width, m = this.props.height;
-    var ctx = this.getDOMNode().getContext('2d');
+    var ctx = ReactDOM.findDOMNode(this).getContext('2d');
     if (this.state.hover && this.props.hoverToSeeOriginal) {
       ctx.drawImage(this.props.img, 0, 0, n, m);
     } else {
@@ -538,7 +539,7 @@ var SVSView = React.createClass({
 
   paint: function () {
     var w = this.props.width, h = this.props.height;
-    var ctx = this.getDOMNode().getContext('2d');
+    var ctx = ReactDOM.findDOMNode(this).getContext('2d');
     var hover = this.state.hover;
 
     ctx.clearRect(0, 0, w, h);
@@ -822,14 +823,16 @@ var App = React.createClass({
     var stats = (
       <div className="stats" style={{ left: w + 20 }}>
         <table>
-          <tr>
-            <th className="label">Image size</th>
-            <td>{w} &times; {h}</td>
-          </tr>
-          <tr>
-            <th className="label">#pixels</th>
-            <td>= {w*h}</td>
-          </tr>
+          <tbody>
+            <tr>
+              <th className="label">Image size</th>
+              <td>{w} &times; {h}</td>
+            </tr>
+            <tr>
+              <th className="label">#pixels</th>
+              <td>= {w*h}</td>
+            </tr>
+          </tbody>
         </table>
         <p>
           <span className="label">Uncompressed size</span><br />
@@ -901,4 +904,4 @@ var App = React.createClass({
 
 });
 
-React.render(<App />, document.getElementById('app'));
+ReactDOM.render(<App />, document.getElementById('app'));
