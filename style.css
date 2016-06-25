@@ -91,6 +91,10 @@ p {
   opacity: 0.8;
 }
 
+.slick-next:before, .slick-prev:before {
+  color: #888;
+}
+
 .caption {
   margin: 4px 0;
 }
