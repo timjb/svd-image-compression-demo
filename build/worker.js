@@ -42,26 +42,23 @@
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	/// <reference path="../typings/globals/emscripten/index.d.ts" />
 	/// <reference path="../node_modules/typescript/lib/lib.webworker.d.ts" />
 	"use strict";
-	var protocol = __webpack_require__(1);
 	importScripts('../build/clapack.js');
-	var input;
+	var input = null;
 	this.onmessage = function (msg) {
 	    var data = msg.data;
-	    if (data.msg === protocol.setInputCmd) {
-	        var args = data;
-	        input = { a: new Float64Array(args.a), m: args.m, n: args.n };
+	    if (data.msg === "set-input") {
+	        input = { a: new Float64Array(data.a), m: data.m, n: data.n };
 	    }
-	    else if (data.msg === protocol.computeSVDCmd) {
-	        var args = data;
+	    else if (data.msg === "compute-svd") {
 	        if (!input) {
 	            throw new Error('set-input must come first!');
 	        }
-	        svd(input.a, input.m, input.n, args.approx);
+	        svd(input.a, input.m, input.n, data.approx);
 	    }
 	    else {
 	        throw new Error('unrecognized command!');
@@ -102,31 +99,6 @@
 	}
 
 
-/***/ },
-/* 1 */
-/***/ function(module, exports) {
-
-	"use strict";
-	exports.setInputCmd = 'set-input';
-	function makeSetInputReq(args) {
-	    return {
-	        msg: exports.setInputCmd,
-	        a: args.a,
-	        m: args.m,
-	        n: args.n
-	    };
-	}
-	exports.makeSetInputReq = makeSetInputReq;
-	exports.computeSVDCmd = 'compute-svd';
-	function makeComputeSVDReq(args) {
-	    return {
-	        msg: exports.computeSVDCmd,
-	        approx: args.approx
-	    };
-	}
-	exports.makeComputeSVDReq = makeComputeSVDReq;
-
-
 /***/ }
 /******/ ]);
-//# sourceMappingURL=app.js.map
+//# sourceMappingURL=worker.js.map

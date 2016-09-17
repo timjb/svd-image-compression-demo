@@ -1,56 +1,59 @@
+/// <reference path="../node_modules/typescript/lib/lib.d.ts" />
+
+import * as React from "react";
+import * as ReactDOM from "react-dom";
+import * as NoUiSlider from "nouislider";
+import * as Slider from "react-slick";
+import imageSvd = require('./image-svd');
+import types = require('./types');
+import protocol = require('./svd-worker-protocol');
+
 // Copied from underscore.js (https://github.com/jashkenas/underscore)
 //
 // Returns a function, that, as long as it continues to be invoked, will not
 // be triggered. The function will be called after it stops being called for
 // N milliseconds. If `immediate` is passed, trigger the function on the
 // leading edge, instead of the trailing.
-function debounce (func, wait, immediate) {
-  var getNow = Date.now || function() {
-    return new Date().getTime();
-  };
+function debounce(func: () => void, wait: number, immediate: boolean = false): () => void {
+  const getNow = Date.now || (() => new Date().getTime());
   
-  var timeout, args, context, timestamp, result;
+  let timeout: number, args: IArguments, timestamp: number;
 
-  var later = function() {
-    var last = getNow() - timestamp;
+  const later = () => {
+    const last = getNow() - timestamp;
 
     if (last < wait && last >= 0) {
       timeout = setTimeout(later, wait - last);
     } else {
       timeout = null;
       if (!immediate) {
-        result = func.apply(context, args);
-        if (!timeout) context = args = null;
+        func.apply(null, args);
       }
     }
   };
 
-  return function() {
-    context = this;
+  return function () {
     args = arguments;
     timestamp = getNow();
-    var callNow = immediate && !timeout;
+    const callNow = immediate && !timeout;
     if (!timeout) timeout = setTimeout(later, wait);
     if (callNow) {
-      result = func.apply(context, args);
-      context = args = null;
+      func.apply(null, args);
     }
-
-    return result;
   };
 }
 
-function toFloat32Array (f64A) {
+function toFloat32Array(f64A: Float64Array | number[]): Float32Array {
   //return new Float32Array(f64A); // doesn't work in Firefox
-  var l = f64A.length;
-  var f32A = new Float32Array(l);
-  for (var i = 0; i < l; i++) {
+  const l = f64A.length;
+  const f32A = new Float32Array(l);
+  for (let i = 0; i < l; i++) {
     f32A[i] = f64A[i];
   }
   return f32A;
 }
 
-function toFloat32Svd (svd) {
+function toFloat32Svd(svd: types.SVD64): types.SVD {
   return {
     u:  toFloat32Array(svd.u),
     s:  toFloat32Array(svd.s),
@@ -59,7 +62,7 @@ function toFloat32Svd (svd) {
   };
 }
 
-function toFloat32Svds (svds) {
+function toFloat32Svds(svds: types.SVDs64): types.SVDs {
   return {
     red:   toFloat32Svd(svds.red),
     green: toFloat32Svd(svds.green),
@@ -67,45 +70,65 @@ function toFloat32Svds (svds) {
   };
 }
 
-var computeSvds = (function () {
-  var state = { red: {}, green: {}, blue: {} };
+const computeSvds = (() => {
+  function start(): Worker { return new Worker('js/svd-worker.js'); }
 
-  function start () { return new Worker('js/svd-worker.js'); }
-
-  function initWorker (color) {
-    var s = state[color];
-    s.computingSvd = false;
-    if (s.worker) { s.worker.terminate(); }
-    s.worker = start();
-    s.worker.onmessage = function (res) {
-      s.onmessage(res);
-    };
+  interface WorkerState {
+    computingSvd: boolean;
+    worker: Worker;
+    onmessage: (event: MessageEvent) => void;
+    approxSvd: types.SVD64;
+    fullSvd: types.SVD64;
   }
 
-  initWorker('red');
-  initWorker('green');
-  initWorker('blue');
+  function initWorker(): WorkerState {
+    const s: WorkerState = {
+      computingSvd: false,
+      worker: start(),
+      onmessage: () => {},
+      approxSvd: null,
+      fullSvd: null
+    };
+    s.worker.onmessage = (res) => {
+      s.onmessage(res);
+    };
+    return s;
+  }
 
-  return function (m, n, channels, cb) {
+  let state: types.RGB<WorkerState> = {
+    red: initWorker(),
+    green: initWorker(),
+    blue: initWorker()
+  };
+
+  return function(
+    m: number, n: number, channels: types.RGB<Float64Array>,
+    callback: (res: types.SVDs64 & { approx: boolean }) => void
+  ) {
     /* It would be great if the web worker API allowed one to simply abort the
        current task a worker is executing by e.g. throwing an exception in the
        worker. With this, all the initialization and memory allocation of
        Emscripten associated with a complete restart could be avoided. */
        
-    var finishedApprox = 0;
-    var finishedFull = 0;
+    let finishedApprox = 0;
+    let finishedFull = 0;
     
-    function helper (color) {
-      var s = state[color];
-      if (s.computingSvd) { initWorker(color); }
+    function helper(mkColorLens: <X>() => types.Lens<types.RGB<X>, X>) {
+      const workerStateLens = mkColorLens<WorkerState>();
+      let s = mkColorLens<WorkerState>().get(state);
+      if (s.computingSvd) {
+        s.worker.terminate();
+        s = initWorker();
+        state = workerStateLens.set(state, s);
+      }
       s.computingSvd = true;
-      var buffer = channels[color].buffer;
-      s.worker.postMessage( { msg: 'set-input', a: buffer, m: m, n: n }, [buffer]);
+      const buffer = mkColorLens<Float64Array>().get(channels).buffer;
+      s.worker.postMessage(protocol.makeSetInputReq({ a: buffer, m: m, n: n }), [buffer]);
       s.onmessage = function (msg) {
-        s.approxSvd = msg.data;
+        s.approxSvd = msg.data as protocol.WorkerRes;
         finishedApprox++;
         if (finishedApprox === 3) {
-          cb({
+          callback({
             red: state.red.approxSvd,
             green: state.green.approxSvd,
             blue: state.blue.approxSvd,
@@ -116,7 +139,7 @@ var computeSvds = (function () {
           s.fullSvd = msg.data;
           finishedFull++;
           if (finishedFull === 3) {
-            cb({
+            callback({
               red: state.red.fullSvd,
               green: state.green.fullSvd,
               blue: state.blue.fullSvd,
@@ -125,23 +148,23 @@ var computeSvds = (function () {
           }
           s.computingSvd = false;
         };
-        s.worker.postMessage({ msg: 'compute-svd', approx: false });
+        s.worker.postMessage(protocol.makeComputeSVDReq({ approx: false }));
       };
-      s.worker.postMessage({ msg: 'compute-svd', approx: true });
+      s.worker.postMessage(protocol.makeComputeSVDReq({ approx: true }));
     }
     
-    helper('red');
-    helper('green');
-    helper('blue');
+    helper(types.mkRedLens);
+    helper(types.mkGreenLens);
+    helper(types.mkBlueLens);
   };
 })();
 
-var preload = (function () {
-  var preloaded = {};
+const preload: (src: string) => void = (() => {
+  const preloaded: { [src: string]: boolean } = {};
 
-  return function (src) {
+  return function(src: string) {
     if (preloaded[src]) { return; }
-    var img = new Image();
+    const img = new Image();
     img.onload = function () {
       preloaded[src] = true;
       console.log("Preloaded image '" + src + "'");
@@ -150,8 +173,8 @@ var preload = (function () {
   };
 })();
 
-function loadImage (src, callback) {
-  var img = new Image();
+function loadImage(src: string, callback: (img: HTMLImageElement) => void) {
+  const img = new Image();
   img.onload = function () { callback(img); };
   if (/^http/.test(src)) {
     console.log('cors');
@@ -164,15 +187,26 @@ function loadImage (src, callback) {
   }
 }
 
-var FileInputField = React.createClass({
+interface FileInputFieldProps {
+  label: string;
+  onChange: (file: File) => void
+}
 
-  onChange: function () {
-    var files = ReactDOM.findDOMNode(this.refs.input).files;
+class FileInputField extends React.Component<FileInputFieldProps, {}> {
+
+  refs: {
+    [key: string]: (Element);
+    input: HTMLInputElement;
+  }
+
+  onChange() {
+    const inputElement = ReactDOM.findDOMNode<HTMLInputElement>(this.refs.input);
+    const files = inputElement.files;
     if (!files || !files[0]) { return; }
     if (this.props.onChange) { this.props.onChange(files[0]); }
-  },
+  }
 
-  render: function () {
+  render() {
     return (
       <span className="button file-input-button">
         <span>{this.props.label}</span>
@@ -181,13 +215,34 @@ var FileInputField = React.createClass({
     );
   }
 
-});
+}
 
+interface GalleryImageDesc {
+  name: string;
+  caption: string;
+  source: string;
+  preview?: string;
+  url?: string;
+  quiz?: boolean;
+}
 
-var Gallery = React.createClass({
+interface FullGalleryImageDesc extends GalleryImageDesc {
+  preview: string;
+  quiz: boolean;
+  width: number;
+  height: number;
+  url: string;
+}
 
-  getImages: function () {
-    function quiz (obj) {
+interface GalleryProps {
+  onClick: (imgDesc: FullGalleryImageDesc) => void
+  onScroll: (imgNum: number) => void
+}
+
+class Gallery extends React.Component<GalleryProps, {}> {
+
+  getImages(): FullGalleryImageDesc[] {
+    function quiz(obj: GalleryImageDesc): GalleryImageDesc {
       obj.preview = 'images/question_mark_small.jpg';
       obj.quiz = true;
       return obj;
@@ -275,7 +330,7 @@ var Gallery = React.createClass({
         caption: 'By Sergiu Bacioiu',
         source: 'https://flic.kr/p/7TdBUA'
       })
-    ].map(function (obj, i) {
+    ].map((obj: GalleryImageDesc, i: number) => {
       return {
         name: obj.name || 'image-'+i,
         width: 150,
@@ -287,14 +342,14 @@ var Gallery = React.createClass({
         quiz: !!obj.quiz
       };
     }));
-  },
+  }
   
-  renderImage: function (img) {
-    var onClick = function (evt) {
+  renderImage(img: FullGalleryImageDesc) {
+    const onClick = (evt: React.MouseEvent) => {
       evt.preventDefault();
       if (this.props.onClick) {this.props.onClick(img); }
-    }.bind(this);
-    var onMouseOver = function () {
+    };
+    const onMouseOver = function () {
       preload(img.url);
     };
 
@@ -310,17 +365,18 @@ var Gallery = React.createClass({
         </p>
       </div>
     );
-  },
+  }
 
-  render: function () {
-    var settings = {
+  render() {
+    const settings = {
       ref: 'slider',
       className: 'gallery',
       slidesToShow: 5,
       slidesToScroll: 5,
       draggable: false,
       infinite: false,
-      afterChange: this.props.onScroll || function () {}
+      // we need the type assertion here because the typing definition is wrong
+      afterChange: (this.props.onScroll as () => void) || (() => {})
     };
 
     return (
@@ -330,20 +386,28 @@ var Gallery = React.createClass({
     );
   }
 
-});
+}
 
-function galleryShowsGuessingPage (slideNum) {
+function galleryShowsGuessingPage(slideNum: number): boolean {
     return slideNum === 10;
 };
 
-var SVSlider = React.createClass({
+interface SVSliderProps {
+  value: number;
+  maxSvs: number;
+  max: number;
+  onUpdate: (svs: number) => void
+  onChange: (svs: number) => void
+}
 
-  render: function () {
+export class SVSlider extends React.Component<SVSliderProps, {}> {
+
+  render() {
     return <div className="slider" />;
-  },
+  }
 
-  componentDidUpdate: function (prevProps, prevState) {
-    var noUiSlider = ReactDOM.findDOMNode(this).noUiSlider;
+  componentDidUpdate(prevProps: SVSliderProps, prevState: {}) {
+    const noUiSlider = ReactDOM.findDOMNode<NoUiSlider.Instance>(this).noUiSlider;
     if (!noUiSlider) { return; }
     if (this.props.value !== noUiSlider.get()) {
       // hacky
@@ -353,38 +417,38 @@ var SVSlider = React.createClass({
       noUiSlider.destroy();
       this.buildSlider();
     }
-  },
+  }
   
-  componentDidMount: function () {
+  componentDidMount() {
     this.buildSlider();
-  },
+  }
 
-  buildSlider: function () {
-    var slider = ReactDOM.findDOMNode(this);
+  buildSlider() {
+    const slider = ReactDOM.findDOMNode<NoUiSlider.Instance>(this);
     noUiSlider.create(slider, this.getSliderOptions());
     
-    slider.noUiSlider.on('update', debounce(function () {
-      var val = Math.round(slider.noUiSlider.get());
+    slider.noUiSlider.on('update', debounce(() => {
+      const val = Math.round(slider.noUiSlider.get() as number);
       if (val !== this.props.value) {
         if (this.props.onUpdate) { this.props.onUpdate(val); }
       }
-    }.bind(this), 50));
-    slider.noUiSlider.on('change', debounce(function () {
-      var val = Math.round(slider.noUiSlider.get());
+    }, 50));
+    slider.noUiSlider.on('change', debounce(() => {
+      const val = Math.round(slider.noUiSlider.get() as number);
       if (val !== this.props.value) {
         if (this.props.onChange) { this.props.onChange(val); }
       }
-    }.bind(this), 50));
-  },
+    }, 50));
+  }
   
-  getSliderOptions: function () {
-    var maxVal = this.props.max;
-    var maxSvs = this.props.maxSvs;
+  getSliderOptions() {
+    const maxVal = this.props.max;
+    const maxSvs = this.props.maxSvs;
 
-    var values = [];
-    for (var i = 1; i < 20; i++)       { values.push(i); }
-    for (i = 20; i < 100; i += 5)      { values.push(i); }
-    for (i = 100; i < maxVal; i += 10) { values.push(i); }
+    const values: number[] = [];
+    for (let i = 1; i < 20; i++)           { values.push(i); }
+    for (let i = 20; i < 100; i += 5)      { values.push(i); }
+    for (let i = 100; i < maxVal; i += 10) { values.push(i); }
     values.push(maxVal);
 
     return {
@@ -402,7 +466,7 @@ var SVSlider = React.createClass({
         mode: 'values',
         values: values,
         density: 10,
-        filter: function (v) {
+        filter: (v: number) => {
           if (v > maxSvs) { return 0; }
           if (v === 1 || v === 10 || v === 20) { return 1; }
           if (v % 100 === 0) { return 1; }
@@ -416,44 +480,71 @@ var SVSlider = React.createClass({
     };
   }
 
-});
+}
 
-var HoverCanvasView = {
+interface HoverCanvasViewProps {
+  width: number;
+  height: number;
+}
 
-  getInitialState: function () {
+interface HoverCanvasViewState {
+  hover: boolean;
+}
+
+abstract class HoverCanvasView<P extends HoverCanvasViewProps, S>
+  extends React.Component<P, S & HoverCanvasViewState> {
+
+  abstract paint(): void
+
+  getInitialState() {
     return { hover: false };
-  },
+  }
 
-  componentDidMount: function () {
+  componentDidMount() {
     this.paint();
-  },
+  }
 
-  componentDidUpdate: function () {
+  componentDidUpdate() {
     this.paint();
-  },
+  }
 
-  onMouseEnter: function () {
-    this.setState({ hover: true });
-  },
+  onMouseEnter() {
+    this.setState({ hover: true } as S & HoverCanvasViewState);
+  }
 
-  onMouseOut: function () {
-    this.setState({ hover: false });
-  },
+  onMouseOut() {
+    this.setState({ hover: false } as S & HoverCanvasViewState);
+  }
 
-  render: function () {
+  render() {
     return <canvas width={this.props.width}
                    height={this.props.height}
                    onMouseEnter={this.onMouseEnter}
                    onMouseOut={this.onMouseOut} />;
   }
 
-};
+}
 
-var SVDView = React.createClass({
+interface SVDViewProps extends HoverCanvasViewProps {
+  numSvs: number;
+  hoverToSeeOriginal: boolean;
+  img: HTMLImageElement;
+  svds: types.SVDs
+}
 
-  mixins: [HoverCanvasView],
+class SVDView extends HoverCanvasView<SVDViewProps, HoverCanvasViewState> {
 
-  shouldComponentUpdate: function (nextProps, nextState) {
+  private products: {
+    red: Float32Array,
+    green: Float32Array,
+    blue: Float32Array
+  }
+
+  private imageData: ImageData
+
+  private imageDataUpdates: number
+
+  shouldComponentUpdate(nextProps: SVDViewProps, nextState: HoverCanvasViewState) {
     if (nextProps.svds !== this.props.svds) {
       // invalidate cached image data
       this.imageData = null;
@@ -476,32 +567,32 @@ var SVDView = React.createClass({
       }
     }
     return true;
-  },
+  }
   
-  initProducts: function () {
-    var n = this.props.width, m = this.props.height;
+  initProducts() {
+    const n = this.props.width, m = this.props.height;
     this.products = {
       red:   new Float32Array(m*n),
       green: new Float32Array(m*n),
       blue:  new Float32Array(m*n)
     };
-  },
+  }
 
-  computeProductsFromScratch: function () {
+  computeProductsFromScratch() {
     imageSvd.multiplySvds(this.props.svds, this.products, 0, this.props.numSvs, 1);
     this.imageDataUpdates = 0;
-  },
+  }
 
-  refreshImageData: function () {
+  refreshImageData() {
     if (this.imageDataUpdates >= 20) {
-      this.computeImageDataFromScratch();
+      this.computeProductsFromScratch();
       this.paint();
     }
-  },
+  }
 
-  paint: function () {
-    var n = this.props.width, m = this.props.height;
-    var ctx = ReactDOM.findDOMNode(this).getContext('2d');
+  paint() {
+    const n = this.props.width, m = this.props.height;
+    const ctx = ReactDOM.findDOMNode<HTMLCanvasElement>(this).getContext('2d');
     if (this.state.hover && this.props.hoverToSeeOriginal) {
       ctx.drawImage(this.props.img, 0, 0, n, m);
     } else {
@@ -515,13 +606,13 @@ var SVDView = React.createClass({
         this.initProducts();
         this.computeProductsFromScratch();
       }
-      var data = this.imageData.data;
-      var redProd = this.products.red,
+      const data = this.imageData.data;
+      const redProd = this.products.red,
           greenProd = this.products.green,
           blueProd = this.products.blue;
-      for (var y = 0; y < m; y++) {
-        for (var x = 0; x < n; x++) {
-          var i = y*n + x, j = 4*i;
+      for (let y = 0; y < m; y++) {
+        for (let x = 0; x < n; x++) {
+          const i = y*n + x, j = 4*i;
           data[j]   = redProd[i];
           data[j+1] = greenProd[i];
           data[j+2] = blueProd[i];
@@ -531,38 +622,41 @@ var SVDView = React.createClass({
     }
   }
 
-});
+}
 
-var SVSView = React.createClass({
+interface SVSViewProps extends HoverCanvasViewProps {
+  svds: types.SVDs;
+  numSvs: number;
+}
 
-  mixins: [HoverCanvasView],
+class SVSView extends HoverCanvasView<SVSViewProps, HoverCanvasViewState> {
 
-  paint: function () {
-    var w = this.props.width, h = this.props.height;
-    var ctx = ReactDOM.findDOMNode(this).getContext('2d');
-    var hover = this.state.hover;
+  paint() {
+    const w = this.props.width, h = this.props.height;
+    const ctx = ReactDOM.findDOMNode<HTMLCanvasElement>(this).getContext('2d');
+    const hover = this.state.hover;
 
     ctx.clearRect(0, 0, w, h);
 
     ctx.fillStyle = hover ? 'rgb(90, 90, 90)' : 'rgba(90, 90, 90, 0.35)';
     ctx.fillRect(0, 0, w, h);
 
-    var redSvs   = this.props.svds.red.s;
-    var greenSvs = this.props.svds.green.s;
-    var blueSvs  = this.props.svds.blue.s;
-    var norm = (redSvs[5] + greenSvs[5] + blueSvs[5]) / (3*h);
-    var numSvs = this.props.numSvs;
-    var d = this.props.svds.red.d;
+    const redSvs   = this.props.svds.red.s;
+    const greenSvs = this.props.svds.green.s;
+    const blueSvs  = this.props.svds.blue.s;
+    const norm = (redSvs[5] + greenSvs[5] + blueSvs[5]) / (3*h);
+    const numSvs = this.props.numSvs;
+    const d = this.props.svds.red.d;
 
-    var imageData = ctx.getImageData(0, 0, w, h);
-    var data = imageData.data;
-    for (var i = 0; i < d; i++) {
-      var redV   = Math.round(redSvs[i]   / norm);
-      var greenV = Math.round(greenSvs[i] / norm);
-      var blueV  = Math.round(blueSvs[i]  / norm);
-      var b = i < numSvs ? 30 : 0; // bonus
-      for (var j = 0; j < h; j++) {
-        var k = ((h-j)*w + i)*4;
+    const imageData = ctx.getImageData(0, 0, w, h);
+    const data = imageData.data;
+    for (let i = 0; i < d; i++) {
+      const redV   = Math.round(redSvs[i]   / norm);
+      const greenV = Math.round(greenSvs[i] / norm);
+      const blueV  = Math.round(blueSvs[i]  / norm);
+      const b = i < numSvs ? 30 : 0; // bonus
+      for (let j = 0; j < h; j++) {
+        const k = ((h-j)*w + i)*4;
         data[k]   = (j < redV   ? 225 : 100) + b;
         data[k+1] = (j < greenV ? 225 : 100) + b;
         data[k+2] = (j < blueV  ? 225 : 100) + b;
@@ -572,35 +666,41 @@ var SVSView = React.createClass({
     ctx.putImageData(imageData, 0, 0);
   }
 
-});
+}
 
 // returns a random element in [0, n)
-function random (n) {
+function random(n: number): number {
   return Math.floor(Math.random() * n);
 }
 
-function randomColorFromImg (img) {
-  var canvas = document.createElement('canvas');
+function randomColorFromImg(img: HTMLImageElement): string {
+  const canvas = document.createElement('canvas');
   canvas.width  = img.width;
   canvas.height = img.height;
-  var ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d');
   ctx.drawImage(img, 0, 0);
-  var r = 0, g = 0, b = 0;
-  var n = 10;
-  for (var i = 0; i < n; i++) {
-    var x = random(img.width), y = random(img.height);
-    var d = ctx.getImageData(x, y, 1, 1).data;
+  let r = 0, g = 0, b = 0;
+  const n = 10;
+  for (let i = 0; i < n; i++) {
+    const x = random(img.width), y = random(img.height);
+    const d = ctx.getImageData(x, y, 1, 1).data;
     r += d[0]; g += d[1]; b += d[2];
   }
-  var fl = Math.floor;
+  const fl = Math.floor;
   return 'rgb(' + fl(r/n) + ',' + fl(g/n) + ',' + fl(b/n) + ')';
 }
 
-var Placeholder = React.createClass({
+interface PlaceholderProps {
+  width: number;
+  height: number;
+  img: HTMLImageElement
+}
 
-  render: function () {
-    var color = randomColorFromImg(this.props.img);
-    var style = {
+class Placeholder extends React.Component<PlaceholderProps, {}> {
+
+  render() {
+    const color = randomColorFromImg(this.props.img);
+    const style = {
       width: this.props.width,
       height: this.props.height,
       background: color
@@ -608,33 +708,58 @@ var Placeholder = React.createClass({
     return <div className="placeholder" style={style} />;
   }
 
-});
+}
 
-function getImageData (img) {
-  var canvas = document.createElement('canvas');
+function getImageData(img: HTMLImageElement): ImageData {
+  const canvas = document.createElement('canvas');
   canvas.width  = img.width;
   canvas.height = img.height;
-  var ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d');
   ctx.drawImage(img, 0, 0);
   return ctx.getImageData(0, 0, img.width, img.height);
 }
 
-var firstImg = {
+const firstImg = {
   w: 600, h: 402,
   src: 'images/mountains_sea.jpg',
   approxSrc: 'images/mountains_sea_5svs.jpg'
 };
 
-function contains (list, el) {
-  for (var i = 0; i < list.length; i++) {
+type Indexable<V> = {
+  [key: number]: V
+  length: number;
+}
+
+function contains<V, L extends Indexable<V>>(list: L, el: V): boolean {
+  for (let i = 0; i < list.length; i++) {
     if (list[i] === el) { return true; }
   }
   return false;
 }
 
-var App = React.createClass({
+interface AppState {
+  width: number;
+  height: number;
+  placeholderImg: string;
+  numSvs: number;
+  approx: boolean;
+  showSvs: boolean;
+  error: string;
+  hoverToSeeOriginal: boolean;
+  guessingPage: boolean;
+  hover: boolean;
+  img: HTMLImageElement;
+  svds: types.SVDs;
+}
 
-  getInitialState: function () {
+class App extends React.Component<{}, AppState> {
+
+  refs: {
+    [key: string]: (Element | React.Component<any, any>);
+    svdView: SVDView;
+  }
+
+  getInitialState() {
     return {
       width: firstImg.w,
       height: firstImg.h,
@@ -644,20 +769,22 @@ var App = React.createClass({
       showSvs: false,
       error: "",
       hoverToSeeOriginal: true,
-      guessingPage: false
+      guessingPage: false,
+      hover: false
     };
-  },
+  }
 
-  componentDidMount: function () {
+  componentDidMount() {
     window.ondragover = this.onDragOver;
     this.loadImage(firstImg.src, firstImg.approxSrc);
-  },
+  }
 
-  initializeImage: function (img) {
-    var w = img.width, h = img.height;
+  initializeImage(img: HTMLImageElement) {
+    const {width, height} = img;
 
+    let imageData: ImageData;
     try {
-      var imageData = getImageData(img);
+      imageData = getImageData(img);
     } catch (exc) {
       if (exc.message.match(/(tainted|cross\-origin|insecure)/)) {
         return window.alert("Due to browser limitations (cross-origin policy), it isn't possible use pictures dragged from other sites. You have to save the image locally before you can use it.");
@@ -665,116 +792,112 @@ var App = React.createClass({
       throw exc; // rethrow
     }
 
-    if (w > 1000 || h > 1000) {
-      var msg = "Your image is quite large. Computing the SVD may take a while. Continue?";
+    if (width > 1000 || height > 1000) {
+      const msg = "Your image is quite large. Computing the SVD may take a while. Continue?";
       if (!window.confirm(msg)) { return; }
     }
 
-    this.setState({ width: w, height: h, img: img, svds: null, error: "" })
-    var pxls = imageSvd.imageDataToPixels(imageData);
+    this.setState({ width, height, img, svds: null, error: "" } as AppState)
+    const pxls = imageSvd.imageDataToPixels(imageData);
     
-    computeSvds(h, w, pxls, function (svds) {
-      this.setState({ svds: toFloat32Svds(svds), approx: svds.approx });
-    }.bind(this));
-  },
+    computeSvds(height, width, pxls, (svds) => {
+      this.setState({ svds: toFloat32Svds(svds), approx: svds.approx } as AppState);
+    });
+  }
 
-  loadImage: function (url, placeholderImg) {
-    this.setState({ placeholderImg: placeholderImg || null });
+  loadImage(url: string, placeholderImg: string = null) {
+    this.setState({ placeholderImg } as AppState);
     loadImage(url, this.initializeImage);
-  },
+  }
 
-  onDragOver: function (evt) {
+  onDragOver(evt: React.DragEvent | DragEvent) {
     // without this, the drop event would not fire on the element!
     evt.preventDefault();
 
     if (!this.state.hover) {
-      var types = evt.dataTransfer.types;
-      this.setState({
-        hover: true,
-        error: (contains(types, 'text/uri-list') ||
-                contains(types, 'Files'))
-                 ? ""
-                 : "The dragged object is not an image!"
-      });
+      const types = evt.dataTransfer.types;
+      const error =
+        contains(types, 'text/uri-list') || contains(types, 'Files')
+          ? ""
+          : "The dragged object is not an image!";
+      this.setState({ hover: true, error } as AppState);
     }
-  },
+  }
 
-  onDragLeave: function (evt) {
-    this.setState({ hover: false, error: "" });
-  },
+  onDragLeave(evt: React.MouseEvent) {
+    this.setState({ hover: false, error: "" } as AppState);
+  }
 
-  onDrop: function (evt) {
-    this.setState({ hover: false });
+  onDrop(evt: React.DragEvent) {
+    this.setState({ hover: false } as AppState);
     evt.preventDefault();
 
-    var files = evt.dataTransfer.files;
+    const files = evt.dataTransfer.files;
     if (files && files.length > 0) {
       this.onFileChosen(files[0]);
     } else if (contains(evt.dataTransfer.types, 'text/uri-list')) {
       this.loadImage(evt.dataTransfer.getData('text/uri-list'));
     }
-  },
+  }
 
-  onFileChosen: function (file) {
+  onFileChosen(file: File) {
     if (!file.type.match(/^image\/.*/)) {
-      this.setState({
-        error: "The chosen file is not an image! Try another file ..."
-      });
+      const error = "The chosen file is not an image! Try another file ...";
+      this.setState({ error } as AppState);
       return;
     }
-    this.setState({ error: "" });
-    var reader = new FileReader();
-    reader.onload = function (evt) {
-      this.loadImage(evt.target.result);
-    }.bind(this);
+    this.setState({ error: "" } as AppState);
+    const reader = new FileReader();
+    reader.onload = (evt: Event) => {
+      const target = evt.target as EventTarget & { result: string };
+      this.loadImage(target.result);
+    };
     reader.readAsDataURL(file);
-  },
+  }
 
-  onUpdateSvs: function (numSvs) {
-    this.setState({ numSvs: numSvs });
-  },
+  onUpdateSvs(numSvs: number) {
+    this.setState({ numSvs: numSvs } as AppState);
+  }
 
-  onChangeSvs: function (numSvs) {
-    window.setTimeout(function () {
+  onChangeSvs(numSvs: number) {
+    window.setTimeout(() => {
       this.refs.svdView.refreshImageData();
-    }.bind(this), 400);
-  },
+    }, 400);
+  }
 
-  clickShowSvs: function (evt) {
+  clickShowSvs(evt: React.MouseEvent) {
     evt.preventDefault();
-    this.setState({ showSvs: !this.state.showSvs });
-  },
+    this.setState({ showSvs: !this.state.showSvs } as AppState);
+  }
 
-  clickHoverToSeeOriginal: function (evt) {
+  clickHoverToSeeOriginal(evt: React.MouseEvent) {
     evt.preventDefault();
-    this.setState({ hoverToSeeOriginal: !this.state.hoverToSeeOriginal });
-  },
+    this.setState({ hoverToSeeOriginal: !this.state.hoverToSeeOriginal } as AppState);
+  }
 
-  onClickGallery: function (img) {
+  onClickGallery(img: FullGalleryImageDesc) {
     if (img.quiz) {
-      this.setState({ numSvs: 1 });
+      this.setState({ numSvs: 1 } as AppState);
     }
     this.loadImage(img.url);
-  },
+  }
   
-  onScrollGallery: function (slideNum) {
-    var guessingPage = galleryShowsGuessingPage(slideNum);
-    var transition = this.state.guessingPage !== guessingPage;
+  onScrollGallery(slideNum: number) {
+    const guessingPage = galleryShowsGuessingPage(slideNum);
+    const transition = this.state.guessingPage !== guessingPage;
     if (transition) {
       this.setState({
-        guessingPage: guessingPage,
+        guessingPage,
         hoverToSeeOriginal: !guessingPage
-      });
+      } as AppState);
     }
-  },
+  }
 
-  render: function () {
-    var w = this.state.width, h = this.state.height;
-    var img = this.state.img;
-    var placeholderImg = this.state.placeholderImg;
-    var numSvs = this.state.numSvs;
+  render() {
+    const w = this.state.width, h = this.state.height;
+    const {img, placeholderImg, numSvs} = this.state;
 
-    var infoBar;
+    let infoBar: string | JSX.Element;
     if (this.state.error) {
       infoBar = this.state.error;
     } else if (this.state.hover) {
@@ -791,19 +914,20 @@ var App = React.createClass({
       );
     }
 
-    var imageContainerStyle = {
+    const imageContainerStyle = {
       width:  w + 240,
       height: h - 20
     };
 
-    var dropTarget = (
+    const dropTarget = (
       <div className={'drop-target ' + (this.state.error ? '' : 'active')}
            onDragOver={this.onDragOver}
            onDragLeave={this.onDragLeave}
            onDrop={this.onDrop} />
     );
 
-    var mainImageView, maxSvs;
+    let mainImageView: React.Component<any, any> | JSX.Element;
+    let maxSvs: number;
     if (this.state.svds) {
       mainImageView = <SVDView ref="svdView"
                                svds={this.state.svds} numSvs={numSvs}
@@ -819,8 +943,8 @@ var App = React.createClass({
       }
     }
 
-    var compressedSize = h*numSvs + numSvs + numSvs*w;
-    var stats = (
+    const compressedSize = h*numSvs + numSvs + numSvs*w;
+    const stats = (
       <div className="stats" style={{ left: w + 20 }}>
         <table>
           <tbody>
@@ -902,6 +1026,6 @@ var App = React.createClass({
     );
   }
 
-});
+}
 
 ReactDOM.render(<App />, document.getElementById('app'));

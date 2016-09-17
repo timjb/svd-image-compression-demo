@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "outDir": "./build/",
+    "sourceMap": true,
+    "noImplicitAny": true,
+    "module": "commonjs",
+    "target": "es5",
+    "jsx": "react",
+    "noLib": true
+  },
+  "files": [
+    "./node_modules/typescript/lib/lib.d.ts",
+    "./node_modules/typescript/lib/lib.webworker.d.ts",
+    "./typings/globals/emscripten/index.d.ts",
+    "./typings/globals/nouislider/index.d.ts",
+    "./typings/globals/react/index.d.ts",
+    "./typings/globals/react-dom/index.d.ts",
+    "./typings/globals/react-slick/index.d.ts",
+    "./ts/app.tsx",
+    "./ts/image-svd.ts",
+    "./ts/svd-worker.ts",
+    "./ts/svd-worker-protocol.ts",
+    "./ts/types.ts"
+  ]
+}

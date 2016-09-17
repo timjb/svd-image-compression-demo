@@ -1,0 +1,29 @@
+{
+  "name": "svd-image-compression-demo",
+  "version": "1.0.0",
+  "description": "Demonstration of low rank matrix approximations via singular value decomposition",
+  "main": "ts/app.tsx",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/timjb/svd-image-compression-demo.git"
+  },
+  "author": "Tim Baumann <tim@timbaumann.info>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/timjb/svd-image-compression-demo/issues"
+  },
+  "homepage": "https://github.com/timjb/svd-image-compression-demo",
+  "dependencies": {
+    "react": "^15.3.1",
+    "react-dom": "^15.3.1",
+    "react-slick": "^0.14.3"
+  },
+  "devDependencies": {
+    "source-map-loader": "^0.1.5",
+    "ts-loader": "^0.8.2",
+    "typescript": "^2.0.2"
+  }
+}

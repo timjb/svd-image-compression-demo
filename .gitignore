@@ -4,3 +4,6 @@ build/.module-cache
 *.o
 *.a
 .sass-cache
+typings
+node_modules
+.vscode
