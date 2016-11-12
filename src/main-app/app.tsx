@@ -15,7 +15,7 @@ import protocol = require('../shared/svd-worker-protocol');
 function debounce(func: () => void, wait: number, immediate: boolean = false): () => void {
   const getNow = Date.now || (() => new Date().getTime());
   
-  let timeout: number, args: IArguments, timestamp: number;
+  let timeout: null | number, args: IArguments, timestamp: number;
 
   const later = () => {
     const last = getNow() - timestamp;
@@ -75,8 +75,8 @@ const computeSvds = (() => {
     computingSvd: boolean;
     worker: Worker;
     onmessage: (event: MessageEvent) => void;
-    approxSvd: types.SVD64;
-    fullSvd: types.SVD64;
+    approxSvd: null | types.SVD64;
+    fullSvd: null | types.SVD64;
   }
 
   function initWorker(): WorkerState {
@@ -107,9 +107,6 @@ const computeSvds = (() => {
        current task a worker is executing by e.g. throwing an exception in the
        worker. With this, all the initialization and memory allocation of
        Emscripten associated with a complete restart could be avoided. */
-       
-    let finishedApprox = 0;
-    let finishedFull = 0;
     
     function helper(mkColorLens: <X>() => types.Lens<types.RGB<X>, X>) {
       const workerStateLens = mkColorLens<WorkerState>();
@@ -125,8 +122,7 @@ const computeSvds = (() => {
       s.worker.postMessage(protocol.makeSetInputReq({ a: buffer, m: m, n: n }), [buffer]);
       s.onmessage = function (msg) {
         s.approxSvd = msg.data as protocol.WorkerRes;
-        finishedApprox++;
-        if (finishedApprox === 3) {
+        if (state.red.approxSvd && state.green.approxSvd && state.blue.approxSvd) {
           callback({
             red: state.red.approxSvd,
             green: state.green.approxSvd,
@@ -137,8 +133,7 @@ const computeSvds = (() => {
         s.onmessage = function (msg) {
           s.fullSvd = msg.data;
           s.computingSvd = false;
-          finishedFull++;
-          if (finishedFull === 3) {
+          if (state.red.fullSvd && state.green.fullSvd && state.blue.fullSvd) {
             callback({
               red: state.red.fullSvd,
               green: state.green.fullSvd,
@@ -536,13 +531,8 @@ interface SVDViewProps extends HoverCanvasViewProps {
 
 class SVDView extends HoverCanvasView<SVDViewProps, HoverCanvasViewState> {
 
-  private products: {
-    red: Float32Array,
-    green: Float32Array,
-    blue: Float32Array
-  }
-
-  private imageData: ImageData
+  private products: null | types.RGB<Float32Array> = null;
+  private imageData: null | ImageData = null;
 
   private imageDataUpdates: number
 
@@ -551,7 +541,7 @@ class SVDView extends HoverCanvasView<SVDViewProps, HoverCanvasViewState> {
       // invalidate cached image data
       this.imageData = null;
       this.products = null;
-    } else if (nextProps.numSvs !== this.props.numSvs) {
+    } else if (this.products && nextProps.numSvs !== this.props.numSvs) {
       // update cached image data
       if (nextProps.numSvs > this.props.numSvs) {
         this.imageDataUpdates++;
@@ -571,9 +561,9 @@ class SVDView extends HoverCanvasView<SVDViewProps, HoverCanvasViewState> {
     return true;
   }
   
-  initProducts() {
+  initProducts(): types.RGB<Float32Array> {
     const n = this.props.width, m = this.props.height;
-    this.products = {
+    return {
       red:   new Float32Array(m*n),
       green: new Float32Array(m*n),
       blue:  new Float32Array(m*n)
@@ -581,8 +571,20 @@ class SVDView extends HoverCanvasView<SVDViewProps, HoverCanvasViewState> {
   }
 
   computeProductsFromScratch() {
-    imageSvd.multiplySvds(this.props.svds, this.products, 0, this.props.numSvs, 1);
-    this.imageDataUpdates = 0;
+    if (this.products) {
+      imageSvd.multiplySvds(this.props.svds, this.products, 0, this.props.numSvs, 1);
+      this.imageDataUpdates = 0;
+    }
+  }
+
+  getProducts(): types.RGB<Float32Array> {
+    if (this.products) {
+      return this.products;
+    } else {
+      this.products = this.initProducts();
+      this.computeProductsFromScratch();
+      return this.products;
+    }
   }
 
   refreshImageData() {
@@ -595,6 +597,7 @@ class SVDView extends HoverCanvasView<SVDViewProps, HoverCanvasViewState> {
   paint() {
     const n = this.props.width, m = this.props.height;
     const ctx = ReactDOM.findDOMNode<HTMLCanvasElement>(this).getContext('2d');
+    if (!ctx) { return; }
     if (this.state.hover && this.props.hoverToSeeOriginal) {
       ctx.drawImage(this.props.img, 0, 0, n, m);
     } else {
@@ -604,20 +607,14 @@ class SVDView extends HoverCanvasView<SVDViewProps, HoverCanvasViewState> {
         ctx.fillRect(0, 0, n, m);
         this.imageData = ctx.getImageData(0, 0, n, m);
       }
-      if (!this.products) {
-        this.initProducts();
-        this.computeProductsFromScratch();
-      }
       const data = this.imageData.data;
-      const redProd = this.products.red,
-          greenProd = this.products.green,
-          blueProd = this.products.blue;
+      const {red, green, blue} = this.getProducts();
       for (let y = 0; y < m; y++) {
         for (let x = 0; x < n; x++) {
           const i = y*n + x, j = 4*i;
-          data[j]   = redProd[i];
-          data[j+1] = greenProd[i];
-          data[j+2] = blueProd[i];
+          data[j]   = red[i];
+          data[j+1] = green[i];
+          data[j+2] = blue[i];
         }
       }
       ctx.putImageData(this.imageData, 0, 0);
@@ -636,6 +633,7 @@ class SVSView extends HoverCanvasView<SVSViewProps, HoverCanvasViewState> {
   paint() {
     const w = this.props.width, h = this.props.height;
     const ctx = ReactDOM.findDOMNode<HTMLCanvasElement>(this).getContext('2d');
+    if (!ctx) { return; }
     const hover = this.state.hover;
 
     ctx.clearRect(0, 0, w, h);
@@ -679,7 +677,7 @@ function randomColorFromImg(img: HTMLImageElement): string {
   const canvas = document.createElement('canvas');
   canvas.width  = img.width;
   canvas.height = img.height;
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
   ctx.drawImage(img, 0, 0);
   let r = 0, g = 0, b = 0;
   const n = 10;
@@ -716,7 +714,7 @@ function getImageData(img: HTMLImageElement): ImageData {
   const canvas = document.createElement('canvas');
   canvas.width  = img.width;
   canvas.height = img.height;
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
   ctx.drawImage(img, 0, 0);
   return ctx.getImageData(0, 0, img.width, img.height);
 }
@@ -742,7 +740,7 @@ function contains<V, L extends Indexable<V>>(list: L, el: V): boolean {
 interface AppState {
   width: number;
   height: number;
-  placeholderImg: string;
+  placeholderImg: null | string;
   numSvs: number;
   approx: boolean;
   showSvs: boolean;
@@ -750,8 +748,8 @@ interface AppState {
   hoverToSeeOriginal: boolean;
   guessingPage: boolean;
   hover: boolean;
-  img: HTMLImageElement;
-  svds: types.SVDs;
+  img: null | HTMLImageElement;
+  svds: null | types.SVDs;
 }
 
 class App extends React.Component<{}, AppState> {
@@ -810,7 +808,7 @@ class App extends React.Component<{}, AppState> {
     });
   }
 
-  loadImage(url: string, placeholderImg: string = null) {
+  loadImage(url: string, placeholderImg: null | string = null) {
     this.setState({ placeholderImg } as AppState);
     loadImage(url, this.initializeImage.bind(this));
   }
@@ -902,7 +900,7 @@ class App extends React.Component<{}, AppState> {
     const w = this.state.width, h = this.state.height;
     const {img, placeholderImg, numSvs} = this.state;
 
-    let infoBar: string | JSX.Element;
+    let infoBar: null | string | JSX.Element = null;
     if (this.state.error) {
       infoBar = this.state.error;
     } else if (this.state.hover) {
@@ -931,19 +929,19 @@ class App extends React.Component<{}, AppState> {
            onDrop={this.onDrop.bind(this)} />
     );
 
-    let mainImageView: React.Component<any, any> | JSX.Element;
+    let mainImageView: null | React.Component<any, any> | JSX.Element = null;
     let maxSvs: number;
-    if (this.state.svds) {
+    if (this.state.svds && img) {
       mainImageView = <SVDView ref="svdView"
                                svds={this.state.svds} numSvs={numSvs}
                                width={w} height={h} img={img}
                                hoverToSeeOriginal={this.state.hoverToSeeOriginal} />;
       maxSvs = this.state.svds.red.d;
-    } else {
+    } else { // the SVDs have not been computed yet
       maxSvs = 1;
       if (placeholderImg) {
         mainImageView = <img width={w} height={h} src={placeholderImg} />;
-      } else {
+      } else if (img) {
         mainImageView = <Placeholder width={w} height={h} img={img} />;
       }
     }
@@ -1001,7 +999,7 @@ class App extends React.Component<{}, AppState> {
       <div>
         {this.state.hover ? dropTarget : ""}
         <div className="image-container" style={imageContainerStyle}>
-          {mainImageView}
+          {mainImageView ? mainImageView : ""}
           {(this.state.svds && this.state.showSvs)
             ? <SVSView svds={this.state.svds} numSvs={numSvs}
                        width={w} height={h} />

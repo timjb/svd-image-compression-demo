@@ -4,7 +4,7 @@ import protocol = require('../shared/svd-worker-protocol');
 
 importScripts('../build/clapack.js');
 
-let input: {
+let input: null | {
   a: Float64Array,
   m: number,
   n: number
