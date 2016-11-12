@@ -1,4 +1,4 @@
-import types = require('./types');
+import types = require('../shared/types');
 
 export function imageDataToPixels(imageData: ImageData): types.RGB<Float64Array> {
   const n = imageData.width, m = imageData.height;

@@ -1,12 +1,10 @@
-/// <reference path="../node_modules/typescript/lib/lib.d.ts" />
-
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import * as NoUiSlider from "nouislider";
+import * as noUiSlider from "nouislider";
 import * as Slider from "react-slick";
 import imageSvd = require('./image-svd');
-import types = require('./types');
-import protocol = require('./svd-worker-protocol');
+import types = require('../shared/types');
+import protocol = require('../shared/svd-worker-protocol');
 
 // Copied from underscore.js (https://github.com/jashkenas/underscore)
 //
@@ -71,7 +69,7 @@ function toFloat32Svds(svds: types.SVDs64): types.SVDs {
 }
 
 const computeSvds = (() => {
-  function start(): Worker { return new Worker('js/svd-worker.js'); }
+  function start(): Worker { return new Worker('build/svd-worker.js'); }
 
   interface WorkerState {
     computingSvd: boolean;
@@ -115,13 +113,14 @@ const computeSvds = (() => {
     
     function helper(mkColorLens: <X>() => types.Lens<types.RGB<X>, X>) {
       const workerStateLens = mkColorLens<WorkerState>();
-      let s = mkColorLens<WorkerState>().get(state);
+      let s = workerStateLens.get(state);
       if (s.computingSvd) {
         s.worker.terminate();
         s = initWorker();
         state = workerStateLens.set(state, s);
+      } else {
+        s.computingSvd = true;
       }
-      s.computingSvd = true;
       const buffer = mkColorLens<Float64Array>().get(channels).buffer;
       s.worker.postMessage(protocol.makeSetInputReq({ a: buffer, m: m, n: n }), [buffer]);
       s.onmessage = function (msg) {
@@ -137,6 +136,7 @@ const computeSvds = (() => {
         }
         s.onmessage = function (msg) {
           s.fullSvd = msg.data;
+          s.computingSvd = false;
           finishedFull++;
           if (finishedFull === 3) {
             callback({
@@ -146,7 +146,6 @@ const computeSvds = (() => {
               approx: false
             });
           }
-          s.computingSvd = false;
         };
         s.worker.postMessage(protocol.makeComputeSVDReq({ approx: false }));
       };
@@ -210,7 +209,7 @@ class FileInputField extends React.Component<FileInputFieldProps, {}> {
     return (
       <span className="button file-input-button">
         <span>{this.props.label}</span>
-        <input ref="input" type="file" accept="image/*" className="file-input" onChange={this.onChange} />
+        <input ref="input" type="file" accept="image/*" className="file-input" onChange={this.onChange.bind(this)} />
       </span>
     );
   }
@@ -345,13 +344,11 @@ class Gallery extends React.Component<GalleryProps, {}> {
   }
   
   renderImage(img: FullGalleryImageDesc) {
-    const onClick = (evt: React.MouseEvent) => {
+    const onClick = (evt: React.MouseEvent<HTMLElement>) => {
       evt.preventDefault();
-      if (this.props.onClick) {this.props.onClick(img); }
+      if (this.props.onClick) { this.props.onClick(img); }
     };
-    const onMouseOver = function () {
-      preload(img.url);
-    };
+    const onMouseOver = () => { preload(img.url); };
 
     return (
       <div className="image" key={img.name}>
@@ -381,7 +378,7 @@ class Gallery extends React.Component<GalleryProps, {}> {
 
     return (
       <Slider {...settings}>
-        {this.getImages().map(this.renderImage)}
+        {this.getImages().map(this.renderImage.bind(this))}
       </Slider>
     );
   }
@@ -407,7 +404,7 @@ export class SVSlider extends React.Component<SVSliderProps, {}> {
   }
 
   componentDidUpdate(prevProps: SVSliderProps, prevState: {}) {
-    const noUiSlider = ReactDOM.findDOMNode<NoUiSlider.Instance>(this).noUiSlider;
+    const noUiSlider = ReactDOM.findDOMNode<noUiSlider.Instance>(this).noUiSlider;
     if (!noUiSlider) { return; }
     if (this.props.value !== noUiSlider.get()) {
       // hacky
@@ -424,7 +421,7 @@ export class SVSlider extends React.Component<SVSliderProps, {}> {
   }
 
   buildSlider() {
-    const slider = ReactDOM.findDOMNode<NoUiSlider.Instance>(this);
+    const slider = ReactDOM.findDOMNode<noUiSlider.Instance>(this);
     noUiSlider.create(slider, this.getSliderOptions());
     
     slider.noUiSlider.on('update', debounce(() => {
@@ -493,12 +490,13 @@ interface HoverCanvasViewState {
 
 abstract class HoverCanvasView<P extends HoverCanvasViewProps, S>
   extends React.Component<P, S & HoverCanvasViewState> {
+  
+  constructor(props: any) {
+    super(props);
+    this.state = { hover: false } as S & HoverCanvasViewState;
+  }
 
   abstract paint(): void
-
-  getInitialState() {
-    return { hover: false };
-  }
 
   componentDidMount() {
     this.paint();
@@ -517,10 +515,14 @@ abstract class HoverCanvasView<P extends HoverCanvasViewProps, S>
   }
 
   render() {
-    return <canvas width={this.props.width}
-                   height={this.props.height}
-                   onMouseEnter={this.onMouseEnter}
-                   onMouseOut={this.onMouseOut} />;
+    return (
+      <canvas
+        width={this.props.width}
+        height={this.props.height}
+        onMouseEnter={this.onMouseEnter.bind(this)}
+        onMouseOut={this.onMouseOut.bind(this)}
+      />
+    );
   }
 
 }
@@ -759,8 +761,9 @@ class App extends React.Component<{}, AppState> {
     svdView: SVDView;
   }
 
-  getInitialState() {
-    return {
+  constructor(props: any) {
+    super(props);
+    this.state = {
       width: firstImg.w,
       height: firstImg.h,
       placeholderImg: firstImg.approxSrc,
@@ -770,12 +773,14 @@ class App extends React.Component<{}, AppState> {
       error: "",
       hoverToSeeOriginal: true,
       guessingPage: false,
-      hover: false
+      hover: false,
+      img: null,
+      svds: null
     };
   }
 
   componentDidMount() {
-    window.ondragover = this.onDragOver;
+    window.ondragover = this.onDragOver.bind(this);
     this.loadImage(firstImg.src, firstImg.approxSrc);
   }
 
@@ -797,7 +802,7 @@ class App extends React.Component<{}, AppState> {
       if (!window.confirm(msg)) { return; }
     }
 
-    this.setState({ width, height, img, svds: null, error: "" } as AppState)
+    this.setState({ width, height, img, svds: null, error: "" } as AppState);
     const pxls = imageSvd.imageDataToPixels(imageData);
     
     computeSvds(height, width, pxls, (svds) => {
@@ -807,10 +812,10 @@ class App extends React.Component<{}, AppState> {
 
   loadImage(url: string, placeholderImg: string = null) {
     this.setState({ placeholderImg } as AppState);
-    loadImage(url, this.initializeImage);
+    loadImage(url, this.initializeImage.bind(this));
   }
 
-  onDragOver(evt: React.DragEvent | DragEvent) {
+  onDragOver(evt: React.DragEvent<HTMLElement> | DragEvent) {
     // without this, the drop event would not fire on the element!
     evt.preventDefault();
 
@@ -824,11 +829,11 @@ class App extends React.Component<{}, AppState> {
     }
   }
 
-  onDragLeave(evt: React.MouseEvent) {
+  onDragLeave(evt: React.MouseEvent<HTMLElement>) {
     this.setState({ hover: false, error: "" } as AppState);
   }
 
-  onDrop(evt: React.DragEvent) {
+  onDrop(evt: React.DragEvent<HTMLElement>) {
     this.setState({ hover: false } as AppState);
     evt.preventDefault();
 
@@ -865,12 +870,12 @@ class App extends React.Component<{}, AppState> {
     }, 400);
   }
 
-  clickShowSvs(evt: React.MouseEvent) {
+  clickShowSvs(evt: React.MouseEvent<HTMLElement>) {
     evt.preventDefault();
     this.setState({ showSvs: !this.state.showSvs } as AppState);
   }
 
-  clickHoverToSeeOriginal(evt: React.MouseEvent) {
+  clickHoverToSeeOriginal(evt: React.MouseEvent<HTMLElement>) {
     evt.preventDefault();
     this.setState({ hoverToSeeOriginal: !this.state.hoverToSeeOriginal } as AppState);
   }
@@ -921,9 +926,9 @@ class App extends React.Component<{}, AppState> {
 
     const dropTarget = (
       <div className={'drop-target ' + (this.state.error ? '' : 'active')}
-           onDragOver={this.onDragOver}
-           onDragLeave={this.onDragLeave}
-           onDrop={this.onDrop} />
+           onDragOver={this.onDragOver.bind(this)}
+           onDragLeave={this.onDragLeave.bind(this)}
+           onDrop={this.onDrop.bind(this)} />
     );
 
     let mainImageView: React.Component<any, any> | JSX.Element;
@@ -974,16 +979,17 @@ class App extends React.Component<{}, AppState> {
         </p>
         <p>
           <a className={'button toggle-show-svs ' + (this.state.showSvs ? 'active' : '')}
-             href="#" onClick={this.clickShowSvs}>
+             href="#" onClick={this.clickShowSvs.bind(this)}>
             Show singular values
           </a>
         </p>
         <p className="hint">
           <a className={'toggle-hover-original ' + (this.state.hoverToSeeOriginal ? 'active' : '')}
-             href="#" onClick={this.clickHoverToSeeOriginal}>
+             href="#" onClick={this.clickHoverToSeeOriginal.bind(this)}>
             <span className="check-box">
-              {this.state.hoverToSeeOriginal ? <span>&#9745;</span>
-                                             : <span>&#9744;</span>}
+              {this.state.hoverToSeeOriginal
+                ? <span>☑</span>
+                : <span>☐</span>}
             </span>
             <span className="text">hover to see the original picture</span>
           </a>
@@ -1006,8 +1012,8 @@ class App extends React.Component<{}, AppState> {
         <div className="wrapper">
           <div className="options">
             <SVSlider value={numSvs} maxSvs={maxSvs}
-                      onUpdate={this.onUpdateSvs}
-                      onChange={this.onChangeSvs}
+                      onUpdate={this.onUpdateSvs.bind(this)}
+                      onChange={this.onChangeSvs.bind(this)}
                       max={Math.min(w,h)} />
           </div>
           <p>
@@ -1015,10 +1021,12 @@ class App extends React.Component<{}, AppState> {
               ? "How many singular values do you need to recognize the subject of these pictures?"
               : "Change the number of singular values using the slider. Click on one of these images to compress it:"}
           </p>
-          <Gallery ref="gallery" onClick={this.onClickGallery} onScroll={this.onScrollGallery} />
+          <Gallery ref="gallery"
+            onClick={this.onClickGallery.bind(this)}
+            onScroll={this.onScrollGallery.bind(this)} />
           <p>
             <span className="valign">You can compress your own images by using the</span>
-            <FileInputField onChange={this.onFileChosen} label="file picker" />
+            <FileInputField onChange={this.onFileChosen.bind(this)} label="file picker" />
             <span className="valign">or by dropping them on this page.</span>
           </p>
         </div>

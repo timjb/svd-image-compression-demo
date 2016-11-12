@@ -17,13 +17,24 @@
   },
   "homepage": "https://github.com/timjb/svd-image-compression-demo",
   "dependencies": {
-    "react": "^15.3.1",
-    "react-dom": "^15.3.1",
-    "react-slick": "^0.14.3"
+    "@types/emscripten": "0.0.29",
+    "@types/nouislider": "^8.0.30",
+    "@types/react": "^0.14.47",
+    "@types/react-dom": "^0.14.18",
+    "@types/react-slick": "0.0.4",
+    "nouislider": "^9.0.0",
+    "react": "^15.3.2",
+    "react-dom": "^15.3.2",
+    "react-slick": "^0.14.5"
   },
   "devDependencies": {
-    "source-map-loader": "^0.1.5",
-    "ts-loader": "^0.8.2",
-    "typescript": "^2.0.2"
+    "browserify": "^13.1.1",
+    "gulp": "^3.9.1",
+    "gulp-sourcemaps": "^2.2.0",
+    "gulp-uglify": "^2.0.0",
+    "tsify": "^2.0.2",
+    "typescript": "^2.0.9",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0"
   }
 }

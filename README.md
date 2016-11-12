@@ -2,20 +2,13 @@
 
 ## Development
 
-Install `jsx` with
-
 ```bash
-npm install -g react-tools
+$ npm install
+$ npm install gulp-cli
 ```
 
 and run
 
 ```bash
-jsx --watch jsx/ build/
-```
-
-To build the [slick](http://kenwheeler.github.io/slick/) theme, install [Sass](http://sass-lang.com/install) and run
-
-```bash
-$ scss --sourcemap=none --watch deps/slick
+$ gulp
 ```

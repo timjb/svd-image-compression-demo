@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "noImplicitAny": true,
+    "module": "commonjs",
+    "target": "es5",
+    "jsx": "react"
+  },
+  "files": [
+    "./app.tsx",
+    "./image-svd.ts",
+    "../shared/svd-worker-protocol.ts",
+    "../shared/types.ts"
+  ]
+}

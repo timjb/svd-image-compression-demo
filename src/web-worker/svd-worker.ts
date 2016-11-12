@@ -1,7 +1,6 @@
-/// <reference path="../typings/globals/emscripten/index.d.ts" />
-/// <reference path="../node_modules/typescript/lib/lib.webworker.d.ts" />
+/// <reference path="../../node_modules/@types/emscripten/index.d.ts" />
 
-import protocol = require('./svd-worker-protocol');
+import protocol = require('../shared/svd-worker-protocol');
 
 importScripts('../build/clapack.js');
 
@@ -11,7 +10,9 @@ let input: {
   n: number
 } = null;
 
-this.onmessage = function(msg: any) {
+console.log("worker started!");
+
+onmessage = function(msg: any) {
   var data = msg.data as protocol.WorkerReq;
   if (data.msg === "set-input") {
     input = { a: new Float64Array(data.a), m: data.m, n: data.n };
