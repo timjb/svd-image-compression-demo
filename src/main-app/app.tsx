@@ -488,7 +488,7 @@ abstract class HoverCanvasView<P extends HoverCanvasViewProps, S>
   
   constructor(props: any) {
     super(props);
-    this.state = { hover: false } as S & HoverCanvasViewState;
+    this.setState({ hover: false } as S & HoverCanvasViewState);
   }
 
   abstract paint(): void
@@ -535,6 +535,11 @@ class SVDView extends HoverCanvasView<SVDViewProps, HoverCanvasViewState> {
   private imageData: null | ImageData = null;
 
   private imageDataUpdates: number
+
+  constructor(props: SVDViewProps) {
+    super(props);
+    this.state = { hover: false };
+  }
 
   shouldComponentUpdate(nextProps: SVDViewProps, nextState: HoverCanvasViewState) {
     if (nextProps.svds !== this.props.svds) {
@@ -629,6 +634,11 @@ interface SVSViewProps extends HoverCanvasViewProps {
 }
 
 class SVSView extends HoverCanvasView<SVSViewProps, HoverCanvasViewState> {
+
+  constructor(props: SVSViewProps) {
+    super(props);
+    this.state = { hover: false };
+  }
 
   paint() {
     const w = this.props.width, h = this.props.height;
