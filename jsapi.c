@@ -75,7 +75,7 @@ double *matrix_mult (int m, int k, int n, double *A, double *B, bool transA, boo
 }
 
 /* Randomized algorithm that calculates the truncated SVD */
-/* technique based on https://research.facebook.com/blog/294071574113354/fast-randomized-svd/ */
+/* technique based on https://research.fb.com/fast-randomized-svd/ */
 /* precondition: t <= MIN(m, n) */
 int svd_simple_approx (int m, int n, int t, double* A, double* U, double* S, double* Vt) {
   int k = MIN(m, n);
