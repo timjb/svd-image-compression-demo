@@ -4,6 +4,7 @@
   "description": "Demonstration of low rank matrix approximations via singular value decomposition",
   "main": "ts/app.tsx",
   "scripts": {
+    "build": "gulp",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -18,23 +19,24 @@
   "homepage": "https://github.com/timjb/svd-image-compression-demo",
   "dependencies": {
     "@types/emscripten": "0.0.29",
-    "@types/nouislider": "^9.0.0",
-    "@types/react": "^15.0.21",
-    "@types/react-dom": "^0.14.19",
+    "@types/nouislider": "9.0.6",
+    "@types/react": "15.0.21",
+    "@types/react-dom": "0.14.19",
     "@types/react-slick": "0.0.7",
-    "nouislider": "^9.1.0",
-    "react": "^15.4.1",
-    "react-dom": "^15.4.1",
-    "react-slick": "^0.14.5"
+    "jquery": "1.12.4",
+    "nouislider": "9.2.0",
+    "react": "15.4.2",
+    "react-dom": "15.4.2",
+    "react-slick": "0.14.5"
   },
   "devDependencies": {
-    "browserify": "^14.1.0",
-    "gulp": "^3.9.1",
-    "gulp-sourcemaps": "^2.2.0",
-    "gulp-uglify": "^2.0.0",
-    "tsify": "^3.0.1",
-    "typescript": "^2.1.4",
-    "vinyl-buffer": "^1.0.0",
-    "vinyl-source-stream": "^1.1.0"
+    "browserify": "14.1.0",
+    "gulp": "3.9.1",
+    "gulp-sourcemaps": "2.2.0",
+    "gulp-uglify": "2.0.0",
+    "tsify": "3.0.1",
+    "typescript": "2.1.4",
+    "vinyl-buffer": "1.0.0",
+    "vinyl-source-stream": "1.1.0"
   }
 }

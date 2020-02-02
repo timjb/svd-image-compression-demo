@@ -4,11 +4,10 @@
 
 ```bash
 $ npm install
-$ npm install gulp-cli
 ```
 
 and run
 
 ```bash
-$ gulp
+$ npm run build
 ```

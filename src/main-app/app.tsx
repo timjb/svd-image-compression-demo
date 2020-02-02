@@ -14,7 +14,7 @@ import protocol = require('../shared/svd-worker-protocol');
 // leading edge, instead of the trailing.
 function debounce(func: () => void, wait: number, immediate: boolean = false): () => void {
   const getNow = Date.now || (() => new Date().getTime());
-  
+
   let timeout: null | number, args: IArguments, timestamp: number;
 
   const later = () => {
@@ -107,7 +107,7 @@ const computeSvds = (() => {
        current task a worker is executing by e.g. throwing an exception in the
        worker. With this, all the initialization and memory allocation of
        Emscripten associated with a complete restart could be avoided. */
-    
+
     function helper(mkColorLens: <X>() => types.Lens<types.RGB<X>, X>) {
       const workerStateLens = mkColorLens<WorkerState>();
       let s = workerStateLens.get(state);
@@ -146,7 +146,7 @@ const computeSvds = (() => {
       };
       s.worker.postMessage(protocol.makeComputeSVDReq({ approx: true }));
     }
-    
+
     helper(types.mkRedLens);
     helper(types.mkGreenLens);
     helper(types.mkBlueLens);
@@ -337,7 +337,7 @@ class Gallery extends React.Component<GalleryProps, {}> {
       };
     }));
   }
-  
+
   renderImage(img: FullGalleryImageDesc) {
     const onClick = (evt: React.MouseEvent<HTMLElement>) => {
       evt.preventDefault();
@@ -360,19 +360,16 @@ class Gallery extends React.Component<GalleryProps, {}> {
   }
 
   render() {
-    const settings = {
-      ref: 'slider',
-      className: 'gallery',
-      slidesToShow: 5,
-      slidesToScroll: 5,
-      draggable: false,
-      infinite: false,
-      // we need the type assertion here because the typing definition is wrong
-      afterChange: (this.props.onScroll as () => void) || (() => {})
-    };
-
     return (
-      <Slider {...settings}>
+      <Slider
+        ref="slider"
+        className="gallery"
+        slidesToShow={5}
+        slidesToScroll={5}
+        draggable={false}
+        infinite={false}
+        afterChange={(this.props.onScroll as () => void) || (() => {}) /* we need the type assertion here because the typing definition is wrong */}
+      >
         {this.getImages().map(this.renderImage.bind(this))}
       </Slider>
     );
@@ -401,7 +398,8 @@ export class SVSlider extends React.Component<SVSliderProps, {}> {
   componentDidUpdate(prevProps: SVSliderProps, prevState: {}) {
     const noUiSlider = ReactDOM.findDOMNode<noUiSlider.Instance>(this).noUiSlider;
     if (!noUiSlider) { return; }
-    if (this.props.value !== noUiSlider.get()) {
+    console.log(noUiSlider.get() + " is a " + typeof noUiSlider.get());
+    if (this.props.value !== noUiSlider.get() as any as number) {
       // hacky
       noUiSlider.set(this.props.value);
     }
@@ -410,7 +408,7 @@ export class SVSlider extends React.Component<SVSliderProps, {}> {
       this.buildSlider();
     }
   }
-  
+
   componentDidMount() {
     this.buildSlider();
   }
@@ -418,22 +416,24 @@ export class SVSlider extends React.Component<SVSliderProps, {}> {
   buildSlider() {
     const slider = ReactDOM.findDOMNode<noUiSlider.Instance>(this);
     noUiSlider.create(slider, this.getSliderOptions());
-    
+
+    const getSliderValue = () => Math.round(slider.noUiSlider.get() as any as number);
+
     slider.noUiSlider.on('update', debounce(() => {
-      const val = Math.round(slider.noUiSlider.get() as number);
+      const val = getSliderValue();
       if (val !== this.props.value) {
         if (this.props.onUpdate) { this.props.onUpdate(val); }
       }
     }, 50));
     slider.noUiSlider.on('change', debounce(() => {
-      const val = Math.round(slider.noUiSlider.get() as number);
+      const val = getSliderValue();
       if (val !== this.props.value) {
         if (this.props.onChange) { this.props.onChange(val); }
       }
     }, 50));
   }
-  
-  getSliderOptions() {
+
+  getSliderOptions(): noUiSlider.Options {
     const maxVal = this.props.max;
     const maxSvs = this.props.maxSvs;
 
@@ -483,12 +483,12 @@ interface HoverCanvasViewState {
   hover: boolean;
 }
 
-abstract class HoverCanvasView<P extends HoverCanvasViewProps, S>
-  extends React.Component<P, S & HoverCanvasViewState> {
-  
+abstract class HoverCanvasView<P extends HoverCanvasViewProps, S extends HoverCanvasViewState>
+  extends React.Component<P, S> {
+
   constructor(props: any) {
     super(props);
-    this.setState({ hover: false } as S & HoverCanvasViewState);
+    this.setState({ hover: false });
   }
 
   abstract paint(): void
@@ -502,11 +502,11 @@ abstract class HoverCanvasView<P extends HoverCanvasViewProps, S>
   }
 
   onMouseEnter() {
-    this.setState({ hover: true } as S & HoverCanvasViewState);
+    this.setState({ hover: true });
   }
 
   onMouseOut() {
-    this.setState({ hover: false } as S & HoverCanvasViewState);
+    this.setState({ hover: false });
   }
 
   render() {
@@ -565,7 +565,7 @@ class SVDView extends HoverCanvasView<SVDViewProps, HoverCanvasViewState> {
     }
     return true;
   }
-  
+
   initProducts(): types.RGB<Float32Array> {
     const n = this.props.width, m = this.props.height;
     return {
@@ -812,7 +812,7 @@ class App extends React.Component<{}, AppState> {
 
     this.setState({ width, height, img, svds: null, error: "" } as AppState);
     const pxls = imageSvd.imageDataToPixels(imageData);
-    
+
     computeSvds(height, width, pxls, (svds) => {
       this.setState({ svds: toFloat32Svds(svds), approx: svds.approx } as AppState);
     });
@@ -894,7 +894,7 @@ class App extends React.Component<{}, AppState> {
     }
     this.loadImage(img.url);
   }
-  
+
   onScrollGallery(slideNum: number) {
     const guessingPage = galleryShowsGuessingPage(slideNum);
     const transition = this.state.guessingPage !== guessingPage;
