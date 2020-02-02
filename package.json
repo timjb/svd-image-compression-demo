@@ -18,7 +18,7 @@
   },
   "homepage": "https://github.com/timjb/svd-image-compression-demo",
   "dependencies": {
-    "jquery": "1.12.4",
+    "jquery": "3.4.0",
     "nouislider": "^14.1.1",
     "react": "15.6.2",
     "react-dom": "15.6.2",
