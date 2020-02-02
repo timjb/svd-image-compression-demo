@@ -19,14 +19,14 @@
   "homepage": "https://github.com/timjb/svd-image-compression-demo",
   "dependencies": {
     "jquery": "1.12.4",
-    "nouislider": "9.2.0",
+    "nouislider": "^14.1.1",
     "react": "15.6.2",
     "react-dom": "15.6.2",
     "react-slick": "0.14.5"
   },
   "devDependencies": {
     "@types/emscripten": "0.0.29",
-    "@types/nouislider": "9.0.6",
+    "@types/nouislider": "^9.0.6",
     "@types/react": "15.0.30",
     "@types/react-dom": "15.5.0",
     "@types/react-slick": "0.0.7",
