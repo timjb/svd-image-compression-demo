@@ -186,30 +186,21 @@ interface FileInputFieldProps {
   onChange: (file: File) => void
 }
 
-class FileInputField extends React.Component<FileInputFieldProps, {}> {
-
-  refs: {
-    [key: string]: (Element);
-    input: HTMLInputElement;
-  }
-
-  onChange() {
-    const inputElement = ReactDOM.findDOMNode(this.refs.input) as HTMLInputElement;
+const FileInputField: React.FunctionComponent<FileInputFieldProps> = props => {
+  const onChange = React.useCallback((evt: React.ChangeEvent<HTMLInputElement>) => {
+    const inputElement = evt.target;
     const files = inputElement.files;
     if (!files || !files[0]) { return; }
-    if (this.props.onChange) { this.props.onChange(files[0]); }
-  }
+    props.onChange(files[0]);
+  }, [props.onChange]);
 
-  render() {
-    return (
-      <span className="button file-input-button">
-        <span>{this.props.label}</span>
-        <input ref="input" type="file" accept="image/*" className="file-input" onChange={this.onChange.bind(this)} />
-      </span>
-    );
-  }
-
-}
+  return (
+    <span className="button file-input-button">
+      <span>{props.label}</span>
+      <input type="file" accept="image/*" className="file-input" onChange={onChange} />
+    </span>
+  );
+};
 
 interface GalleryImageDesc {
   name: string;
@@ -362,7 +353,6 @@ class Gallery extends React.Component<GalleryProps, {}> {
   render() {
     return (
       <Slider
-        ref="slider"
         className="gallery"
         slidesToShow={5}
         slidesToScroll={5}
@@ -391,19 +381,31 @@ interface SVSliderProps {
 
 export class SVSlider extends React.Component<SVSliderProps, {}> {
 
+  private sliderElRef: React.RefObject<HTMLDivElement>;
+
+  constructor(props: any) {
+    super(props);
+    this.sliderElRef = React.createRef();
+  }
+
   render() {
-    return <div className="slider" />;
+    return <div ref={this.sliderElRef} className="slider" />;
+  }
+
+  private getNoUiSlider(): noUiSlider.noUiSlider | undefined {
+    const instance = this.sliderElRef.current! as HTMLElement as noUiSlider.Instance;
+    return instance.noUiSlider;
   }
 
   componentDidUpdate(prevProps: SVSliderProps, prevState: {}) {
-    const noUiSlider = (ReactDOM.findDOMNode(this) as noUiSlider.Instance).noUiSlider;
-    if (!noUiSlider) { return; }
-    if (this.props.value !== SVSlider.getSliderValue(noUiSlider)) {
+    const slider = this.getNoUiSlider();
+    if (!slider) { return; }
+    if (this.props.value !== SVSlider.getSliderValue(slider)) {
       // hacky
-      noUiSlider.set(this.props.value);
+      slider.set(this.props.value);
     }
     if (this.props.maxSvs !== prevProps.maxSvs) {
-      noUiSlider.destroy();
+      slider.destroy();
       this.buildSlider();
     }
   }
@@ -417,18 +419,19 @@ export class SVSlider extends React.Component<SVSliderProps, {}> {
   }
 
   private buildSlider() {
-    const slider = ReactDOM.findDOMNode(this) as noUiSlider.Instance;
-    noUiSlider.create(slider, this.getSliderOptions());
+    const sliderEl = this.sliderElRef.current! as HTMLElement;
+    noUiSlider.create(sliderEl, this.getSliderOptions());
+    const slider = (sliderEl as noUiSlider.Instance).noUiSlider;
 
-    const getSliderValue = () => SVSlider.getSliderValue(slider.noUiSlider);
+    const getSliderValue = () => SVSlider.getSliderValue(slider);
 
-    slider.noUiSlider.on('update', debounce(() => {
+    slider.on('update', debounce(() => {
       const val = getSliderValue();
       if (val !== this.props.value) {
         if (this.props.onUpdate) { this.props.onUpdate(val); }
       }
     }, 50));
-    slider.noUiSlider.on('change', debounce(() => {
+    slider.on('change', debounce(() => {
       const val = getSliderValue();
       if (val !== this.props.value) {
         if (this.props.onChange) { this.props.onChange(val); }
@@ -489,18 +492,26 @@ interface HoverCanvasViewState {
 abstract class HoverCanvasView<P extends HoverCanvasViewProps, S extends HoverCanvasViewState>
   extends React.Component<P, S> {
 
+  private canvasRef: React.RefObject<HTMLCanvasElement>;
+
   constructor(props: any) {
     super(props);
+    this.canvasRef = React.createRef();
   }
 
-  abstract paint(): void
+  abstract paint(ctx: CanvasRenderingContext2D): void
+
+  protected doPaint(): void {
+    const ctx = this.canvasRef.current!.getContext('2d')!;
+    this.paint(ctx);
+  }
 
   componentDidMount() {
-    this.paint();
+    this.doPaint();
   }
 
   componentDidUpdate() {
-    this.paint();
+    this.doPaint();
   }
 
   onMouseEnter() {
@@ -514,6 +525,7 @@ abstract class HoverCanvasView<P extends HoverCanvasViewProps, S extends HoverCa
   render() {
     return (
       <canvas
+        ref={this.canvasRef}
         width={this.props.width}
         height={this.props.height}
         onMouseEnter={this.onMouseEnter.bind(this)}
@@ -597,13 +609,12 @@ class SVDView extends HoverCanvasView<SVDViewProps, HoverCanvasViewState> {
   refreshImageData() {
     if (this.imageDataUpdates >= 20) {
       this.computeProductsFromScratch();
-      this.paint();
+      this.doPaint();
     }
   }
 
-  paint() {
+  paint(ctx: CanvasRenderingContext2D) {
     const n = this.props.width, m = this.props.height;
-    const ctx = (ReactDOM.findDOMNode(this) as HTMLCanvasElement).getContext('2d');
     if (!ctx) { return; }
     if (this.state.hover && this.props.hoverToSeeOriginal) {
       ctx.drawImage(this.props.img, 0, 0, n, m);
@@ -642,9 +653,8 @@ class SVSView extends HoverCanvasView<SVSViewProps, HoverCanvasViewState> {
     this.state = { hover: false };
   }
 
-  paint() {
+  paint(ctx: CanvasRenderingContext2D) {
     const w = this.props.width, h = this.props.height;
-    const ctx = (ReactDOM.findDOMNode(this) as HTMLCanvasElement).getContext('2d');
     if (!ctx) { return; }
     const hover = this.state.hover;
 
@@ -766,10 +776,7 @@ interface AppState {
 
 class App extends React.Component<{}, AppState> {
 
-  refs: {
-    [key: string]: (Element | React.Component<any, any>);
-    svdView: SVDView;
-  }
+  private svdViewRef: React.RefObject<SVDView>;
 
   constructor(props: any) {
     super(props);
@@ -787,6 +794,7 @@ class App extends React.Component<{}, AppState> {
       img: null,
       svds: null
     };
+    this.svdViewRef = React.createRef();
   }
 
   componentDidMount() {
@@ -876,7 +884,7 @@ class App extends React.Component<{}, AppState> {
 
   onChangeSvs(numSvs: number) {
     window.setTimeout(() => {
-      this.refs.svdView.refreshImageData();
+      this.svdViewRef.current?.refreshImageData();
     }, 400);
   }
 
@@ -944,7 +952,7 @@ class App extends React.Component<{}, AppState> {
     let mainImageView: null | React.Component<any, any> | JSX.Element = null;
     let maxSvs: number;
     if (this.state.svds && img) {
-      mainImageView = <SVDView ref="svdView"
+      mainImageView = <SVDView ref={this.svdViewRef}
                                svds={this.state.svds} numSvs={numSvs}
                                width={w} height={h} img={img}
                                hoverToSeeOriginal={this.state.hoverToSeeOriginal} />;
@@ -1031,7 +1039,7 @@ class App extends React.Component<{}, AppState> {
               ? "How many singular values do you need to recognize the subject of these pictures?"
               : "Change the number of singular values using the slider. Click on one of these images to compress it:"}
           </p>
-          <Gallery ref="gallery"
+          <Gallery
             onClick={this.onClickGallery.bind(this)}
             onScroll={this.onScrollGallery.bind(this)} />
           <p>
@@ -1046,4 +1054,4 @@ class App extends React.Component<{}, AppState> {
 
 }
 
-ReactDOM.render(<App />, document.getElementById('app'));
+ReactDOM.render(<React.StrictMode><App /></React.StrictMode>, document.getElementById('app'));
