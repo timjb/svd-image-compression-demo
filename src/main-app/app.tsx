@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as noUiSlider from "nouislider";
-import * as Slider from "react-slick";
+import Slider from "react-slick";
 import imageSvd = require('./image-svd');
 import types = require('../shared/types');
 import protocol = require('../shared/svd-worker-protocol');
