@@ -1,9 +1,7 @@
 {
   "compilerOptions": {
     "sourceMap": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "noImplicitThis": true,
+    "strict": true,
     "noFallthroughCasesInSwitch": true,
     "module": "commonjs",
     "lib": ["DOM", "ES2015", "ScriptHost"],

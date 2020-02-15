@@ -15,7 +15,7 @@ import protocol = require('../shared/svd-worker-protocol');
 function debounce(func: () => void, wait: number, immediate: boolean = false): () => void {
   const getNow = Date.now || (() => new Date().getTime());
 
-  let timeout: null | number, args: IArguments, timestamp: number;
+  let timeout: null | number, timestamp: number;
 
   const later = () => {
     const last = getNow() - timestamp;
@@ -25,18 +25,17 @@ function debounce(func: () => void, wait: number, immediate: boolean = false): (
     } else {
       timeout = null;
       if (!immediate) {
-        func.apply(null, args);
+        func();
       }
     }
   };
 
-  return function () {
-    args = arguments;
+  return () => {
     timestamp = getNow();
     const callNow = immediate && !timeout;
     if (!timeout) timeout = setTimeout(later, wait);
     if (callNow) {
-      func.apply(null, args);
+      func();
     }
   };
 }
@@ -203,7 +202,7 @@ const FileInputField: React.FunctionComponent<FileInputFieldProps> = props => {
 };
 
 interface GalleryImageDesc {
-  name: string;
+  name?: string;
   caption: string;
   source: string;
   preview?: string;
@@ -317,11 +316,11 @@ class Gallery extends React.Component<GalleryProps, {}> {
       })
     ].map((obj: GalleryImageDesc, i: number) => {
       return {
-        name: obj.name || 'image-'+i,
+        name: obj.name ?? 'image-'+i,
         width: 150,
         height: 150,
-        url: obj.url || 'images/' + obj.name + '_medium.jpg',
-        preview: obj.preview || 'images/' + obj.name + '_small.jpg',
+        url: obj.url ?? 'images/' + obj.name + '_medium.jpg',
+        preview: obj.preview ?? 'images/' + obj.name + '_small.jpg',
         caption: obj.caption,
         source: obj.source,
         quiz: !!obj.quiz
@@ -548,7 +547,7 @@ class SVDView extends HoverCanvasView<SVDViewProps, HoverCanvasViewState> {
   private products: null | types.RGB<Float64Array> = null;
   private imageData: null | ImageData = null;
 
-  private imageDataUpdates: number
+  private imageDataUpdates: number = 0;
 
   constructor(props: SVDViewProps) {
     super(props);
