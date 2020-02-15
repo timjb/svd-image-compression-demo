@@ -488,7 +488,6 @@ abstract class HoverCanvasView<P extends HoverCanvasViewProps, S extends HoverCa
 
   constructor(props: any) {
     super(props);
-    this.setState({ hover: false });
   }
 
   abstract paint(): void
