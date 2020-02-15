@@ -398,8 +398,7 @@ export class SVSlider extends React.Component<SVSliderProps, {}> {
   componentDidUpdate(prevProps: SVSliderProps, prevState: {}) {
     const noUiSlider = ReactDOM.findDOMNode<noUiSlider.Instance>(this).noUiSlider;
     if (!noUiSlider) { return; }
-    console.log(noUiSlider.get() + " is a " + typeof noUiSlider.get());
-    if (this.props.value !== noUiSlider.get() as any as number) {
+    if (this.props.value !== SVSlider.getSliderValue(noUiSlider)) {
       // hacky
       noUiSlider.set(this.props.value);
     }
@@ -413,11 +412,15 @@ export class SVSlider extends React.Component<SVSliderProps, {}> {
     this.buildSlider();
   }
 
-  buildSlider() {
+  private static getSliderValue(noUiSlider: noUiSlider.noUiSlider): number {
+    return Math.round(parseInt(noUiSlider.get() as string, 10));
+  }
+
+  private buildSlider() {
     const slider = ReactDOM.findDOMNode<noUiSlider.Instance>(this);
     noUiSlider.create(slider, this.getSliderOptions());
 
-    const getSliderValue = () => Math.round(slider.noUiSlider.get() as any as number);
+    const getSliderValue = () => SVSlider.getSliderValue(slider.noUiSlider);
 
     slider.noUiSlider.on('update', debounce(() => {
       const val = getSliderValue();
@@ -433,7 +436,7 @@ export class SVSlider extends React.Component<SVSliderProps, {}> {
     }, 50));
   }
 
-  getSliderOptions(): noUiSlider.Options {
+  private getSliderOptions(): noUiSlider.Options {
     const maxVal = this.props.max;
     const maxSvs = this.props.maxSvs;
 
