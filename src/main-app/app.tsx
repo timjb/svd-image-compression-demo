@@ -533,7 +533,7 @@ interface SVDViewProps extends HoverCanvasViewProps {
 
 class SVDView extends HoverCanvasView<SVDViewProps, HoverCanvasViewState> {
 
-  private products: null | types.RGB<Float32Array> = null;
+  private products: null | types.RGB<Float64Array> = null;
   private imageData: null | ImageData = null;
 
   private imageDataUpdates: number
@@ -568,12 +568,12 @@ class SVDView extends HoverCanvasView<SVDViewProps, HoverCanvasViewState> {
     return true;
   }
 
-  initProducts(): types.RGB<Float32Array> {
+  initProducts(): types.RGB<Float64Array> {
     const n = this.props.width, m = this.props.height;
     return {
-      red:   new Float32Array(m*n),
-      green: new Float32Array(m*n),
-      blue:  new Float32Array(m*n)
+      red:   new Float64Array(m*n),
+      green: new Float64Array(m*n),
+      blue:  new Float64Array(m*n)
     };
   }
 
@@ -584,7 +584,7 @@ class SVDView extends HoverCanvasView<SVDViewProps, HoverCanvasViewState> {
     }
   }
 
-  getProducts(): types.RGB<Float32Array> {
+  getProducts(): types.RGB<Float64Array> {
     if (this.products) {
       return this.products;
     } else {

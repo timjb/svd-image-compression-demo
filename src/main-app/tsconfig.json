@@ -6,6 +6,7 @@
     "noImplicitThis": true,
     "noFallthroughCasesInSwitch": true,
     "module": "commonjs",
+    "lib": ["DOM", "ES2015", "ScriptHost"],
     "target": "es5",
     "jsx": "react"
   },
