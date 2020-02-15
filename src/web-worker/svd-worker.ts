@@ -2,7 +2,7 @@
 
 import protocol = require('../shared/svd-worker-protocol');
 
-importScripts('../build/clapack.js');
+self.importScripts('../build/clapack.js');
 
 let input: null | {
   a: Float64Array,
@@ -55,10 +55,10 @@ function svd (a: Float64Array, m: number, n: number, approx: boolean) {
     svd_simple(m, n, ptr_a, ptr_u, ptr_s, ptr_vt);
   }
   console.timeEnd(timerName);
-  
+
   const svd: protocol.WorkerRes = { u: arr_u, s: arr_s, vt: arr_vt, d: d, m: m, n: n };
   postMessage(svd);
-  
+
   Module._free(ptr_a);
   Module._free(ptr_u);
   Module._free(ptr_s);
