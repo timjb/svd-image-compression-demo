@@ -194,7 +194,7 @@ class FileInputField extends React.Component<FileInputFieldProps, {}> {
   }
 
   onChange() {
-    const inputElement = ReactDOM.findDOMNode<HTMLInputElement>(this.refs.input);
+    const inputElement = ReactDOM.findDOMNode(this.refs.input) as HTMLInputElement;
     const files = inputElement.files;
     if (!files || !files[0]) { return; }
     if (this.props.onChange) { this.props.onChange(files[0]); }
@@ -396,7 +396,7 @@ export class SVSlider extends React.Component<SVSliderProps, {}> {
   }
 
   componentDidUpdate(prevProps: SVSliderProps, prevState: {}) {
-    const noUiSlider = ReactDOM.findDOMNode<noUiSlider.Instance>(this).noUiSlider;
+    const noUiSlider = (ReactDOM.findDOMNode(this) as noUiSlider.Instance).noUiSlider;
     if (!noUiSlider) { return; }
     if (this.props.value !== SVSlider.getSliderValue(noUiSlider)) {
       // hacky
@@ -417,7 +417,7 @@ export class SVSlider extends React.Component<SVSliderProps, {}> {
   }
 
   private buildSlider() {
-    const slider = ReactDOM.findDOMNode<noUiSlider.Instance>(this);
+    const slider = ReactDOM.findDOMNode(this) as noUiSlider.Instance;
     noUiSlider.create(slider, this.getSliderOptions());
 
     const getSliderValue = () => SVSlider.getSliderValue(slider.noUiSlider);
@@ -603,7 +603,7 @@ class SVDView extends HoverCanvasView<SVDViewProps, HoverCanvasViewState> {
 
   paint() {
     const n = this.props.width, m = this.props.height;
-    const ctx = ReactDOM.findDOMNode<HTMLCanvasElement>(this).getContext('2d');
+    const ctx = (ReactDOM.findDOMNode(this) as HTMLCanvasElement).getContext('2d');
     if (!ctx) { return; }
     if (this.state.hover && this.props.hoverToSeeOriginal) {
       ctx.drawImage(this.props.img, 0, 0, n, m);
@@ -644,7 +644,7 @@ class SVSView extends HoverCanvasView<SVSViewProps, HoverCanvasViewState> {
 
   paint() {
     const w = this.props.width, h = this.props.height;
-    const ctx = ReactDOM.findDOMNode<HTMLCanvasElement>(this).getContext('2d');
+    const ctx = (ReactDOM.findDOMNode(this) as HTMLCanvasElement).getContext('2d');
     if (!ctx) { return; }
     const hover = this.state.hover;
 
@@ -829,7 +829,7 @@ class App extends React.Component<{}, AppState> {
     // without this, the drop event would not fire on the element!
     evt.preventDefault();
 
-    if (!this.state.hover) {
+    if (!this.state.hover && evt.dataTransfer !== null) {
       const types = evt.dataTransfer.types;
       const error =
         contains(types, 'text/uri-list') || contains(types, 'Files')

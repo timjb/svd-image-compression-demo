@@ -8,8 +8,8 @@ var buffer = require('vinyl-buffer');
 
 function copyReact () {
   return gulp.src([
-    "node_modules/react/dist/react.min.js",
-    "node_modules/react-dom/dist/react-dom.min.js"
+    "node_modules/react/umd/react.production.min.js",
+    "node_modules/react-dom/umd/react-dom.production.min.js"
   ]).pipe(gulp.dest("build"));
 }
 
