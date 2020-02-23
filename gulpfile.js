@@ -34,14 +34,14 @@ function compileMainApp () {
   return browserify({
       basedir: 'src/main-app',
       debug: true,
-      entries: ['app.tsx'],
+      entries: ['index.tsx'],
       cache: {},
       packageCache: {}
   })
   .external(['react', 'react-dom'])
   .plugin(tsify)
   .bundle()
-  .pipe(source('app.js'))
+  .pipe(source('index.js'))
   .pipe(buffer())
   .pipe(sourcemaps.init({ loadMaps: true }))
   .pipe(uglify())

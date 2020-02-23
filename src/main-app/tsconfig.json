@@ -9,9 +9,18 @@
     "jsx": "react"
   },
   "files": [
-    "./app.tsx",
-    "./image-svd.ts",
     "../shared/svd-worker-protocol.ts",
-    "../shared/types.ts"
+    "../shared/types.ts",
+    "./App.tsx",
+    "./FileInputField.tsx",
+    "./Gallery.tsx",
+    "./HoverCanvasView.tsx",
+    "./image-svd.ts",
+    "./ImagePlaceholder.tsx",
+    "./index.tsx",
+    "./SingularValuesDiagram.tsx",
+    "./SingularValuesSlider.tsx",
+    "./SvdApproximation.tsx",
+    "./workerCommunication.ts"
   ]
 }
