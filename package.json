@@ -25,7 +25,8 @@
     "nouislider": "^14.1.1",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
-    "react-slick": "^0.25.2"
+    "react-slick": "^0.25.2",
+    "slick-carousel": "^1.8.1"
   },
   "devDependencies": {
     "@types/emscripten": "0.0.29",
@@ -44,6 +45,7 @@
     "gulp-sourcemaps": "^2.6.5",
     "gulp-uglify": "^3.0.2",
     "prettier": "1.19.1",
+    "rimraf": "^3.0.2",
     "tsify": "^4.0.1",
     "typescript": "^3.7.5",
     "vinyl-buffer": "^1.0.1",

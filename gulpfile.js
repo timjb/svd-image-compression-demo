@@ -5,6 +5,11 @@ var tsify = require("tsify");
 var uglify = require("gulp-uglify");
 var sourcemaps = require("gulp-sourcemaps");
 var buffer = require("vinyl-buffer");
+var rimraf = require("rimraf");
+
+function clean(cb) {
+  rimraf("build/!(clapack.js)", cb);
+}
 
 function copyReact() {
   return gulp
@@ -68,11 +73,7 @@ function compileWebWorker() {
     .pipe(gulp.dest("build"));
 }
 
-// TODO: clean step
-exports.default = gulp.parallel(
-  copyReact,
-  copySlickAssets,
-  copyNoUiSliderAssets,
-  compileMainApp,
-  compileWebWorker,
+exports.default = gulp.series(
+  clean,
+  gulp.parallel(copyReact, copySlickAssets, copyNoUiSliderAssets, compileMainApp, compileWebWorker),
 );
