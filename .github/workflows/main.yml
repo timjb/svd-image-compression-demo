@@ -12,3 +12,4 @@ jobs:
         node-version: 12.x
     - run: npm install
     - run: npm run lint:check
+    - run: npm run prettier:check

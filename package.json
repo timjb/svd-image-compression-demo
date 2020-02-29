@@ -7,6 +7,8 @@
     "build": "gulp",
     "lint:check": "eslint . --ext .ts,.tsx --max-warnings 0",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "prettier:check": "prettier --check \"src/**/*.{ts,tsx}\" \"*.js\"",
+    "prettier:fix": "prettier --write \"src/**/*.{ts,tsx}\" \"*.js\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -35,11 +37,13 @@
     "@typescript-eslint/parser": "^2.20.0",
     "browserify": "^16.5.0",
     "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.10.0",
     "eslint-plugin-react": "^7.18.3",
     "eslint-plugin-react-hooks": "^2.5.0",
     "gulp": "^4.0.2",
     "gulp-sourcemaps": "^2.6.5",
     "gulp-uglify": "^3.0.2",
+    "prettier": "1.19.1",
     "tsify": "^4.0.1",
     "typescript": "^3.7.5",
     "vinyl-buffer": "^1.0.1",
