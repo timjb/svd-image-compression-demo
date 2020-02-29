@@ -1,24 +1,28 @@
 import { HoverCanvasView, HoverCanvasViewState, HoverCanvasViewProps } from "./HoverCanvasView";
-import types = require('../shared/types');
+import types = require("../shared/types");
 
 export interface SingularValuesDiagramProps extends HoverCanvasViewProps {
   svds: types.SVDs;
   numSvs: number;
 }
 
-export class SingularValuesDiagram extends HoverCanvasView<SingularValuesDiagramProps, HoverCanvasViewState> {
+export class SingularValuesDiagram extends HoverCanvasView<
+  SingularValuesDiagramProps,
+  HoverCanvasViewState
+> {
   constructor(props: SingularValuesDiagramProps) {
     super(props);
     this.state = { hover: false };
   }
   paint(ctx: CanvasRenderingContext2D): void {
-    const w = this.props.width, h = this.props.height;
+    const w = this.props.width,
+      h = this.props.height;
     if (!ctx) {
       return;
     }
     const hover = this.state.hover;
     ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = hover ? 'rgb(90, 90, 90)' : 'rgba(90, 90, 90, 0.35)';
+    ctx.fillStyle = hover ? "rgb(90, 90, 90)" : "rgba(90, 90, 90, 0.35)";
     ctx.fillRect(0, 0, w, h);
     const redSvs = this.props.svds.red.s;
     const greenSvs = this.props.svds.green.s;

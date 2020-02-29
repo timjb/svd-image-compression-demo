@@ -54,7 +54,7 @@ export class SingularValuesSlider extends React.Component<SVSliderProps, {}> {
   }
   private getNoUiSlider(): noUiSlider.noUiSlider | undefined {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const instance = this.sliderElRef.current! as HTMLElement as noUiSlider.Instance;
+    const instance = (this.sliderElRef.current! as HTMLElement) as noUiSlider.Instance;
     return instance.noUiSlider;
   }
   componentDidUpdate(prevProps: SVSliderProps): void {
@@ -83,22 +83,28 @@ export class SingularValuesSlider extends React.Component<SVSliderProps, {}> {
     noUiSlider.create(sliderEl, this.getSliderOptions());
     const slider = (sliderEl as noUiSlider.Instance).noUiSlider;
     const getSliderValue = (): number => SingularValuesSlider.getSliderValue(slider);
-    slider.on('update', debounce(() => {
-      const val = getSliderValue();
-      if (val !== this.props.value) {
-        if (this.props.onUpdate) {
-          this.props.onUpdate(val);
+    slider.on(
+      "update",
+      debounce(() => {
+        const val = getSliderValue();
+        if (val !== this.props.value) {
+          if (this.props.onUpdate) {
+            this.props.onUpdate(val);
+          }
         }
-      }
-    }, 50));
-    slider.on('change', debounce(() => {
-      const val = getSliderValue();
-      if (val !== this.props.value) {
-        if (this.props.onChange) {
-          this.props.onChange(val);
+      }, 50),
+    );
+    slider.on(
+      "change",
+      debounce(() => {
+        const val = getSliderValue();
+        if (val !== this.props.value) {
+          if (this.props.onChange) {
+            this.props.onChange(val);
+          }
         }
-      }
-    }, 50));
+      }, 50),
+    );
   }
   private getSliderOptions(): noUiSlider.Options {
     const maxVal = this.props.max;
@@ -116,17 +122,17 @@ export class SingularValuesSlider extends React.Component<SVSliderProps, {}> {
     values.push(maxVal);
     return {
       // TODO: adapt to image size
-      behaviour: 'snap',
+      behaviour: "snap",
       range: {
-        'min': [1, 1],
-        '18%': [10, 2],
-        '30%': [20, 10],
-        '48%': [100, 20],
-        'max': [maxVal]
+        min: [1, 1],
+        "18%": [10, 2],
+        "30%": [20, 10],
+        "48%": [100, 20],
+        max: [maxVal],
       },
       start: this.props.value,
       pips: {
-        mode: 'values',
+        mode: "values",
         values: values,
         density: 10,
         filter: (v: number): number => {
@@ -152,8 +158,8 @@ export class SingularValuesSlider extends React.Component<SVSliderProps, {}> {
             return 2;
           }
           return 0;
-        }
-      }
+        },
+      },
     };
   }
 }

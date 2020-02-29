@@ -7,7 +7,7 @@ interface BaseSVD<ArrayType> {
   vt: ArrayType;
 }
 
-export interface Lens<S,A> {
+export interface Lens<S, A> {
   get: (s: S) => A;
   set: (s: S, a: A) => S;
 }
@@ -21,21 +21,21 @@ export interface RGB<X> {
 export function mkRedLens<X>(): Lens<RGB<X>, X> {
   return {
     get: ({ red }): X => red,
-    set: ({ green, blue }, red): RGB<X> => ({ red, green, blue })
+    set: ({ green, blue }, red): RGB<X> => ({ red, green, blue }),
   };
 }
 
 export function mkGreenLens<X>(): Lens<RGB<X>, X> {
   return {
     get: ({ green }): X => green,
-    set: ({ red, blue }, green): RGB<X> => ({ red, green, blue })
+    set: ({ red, blue }, green): RGB<X> => ({ red, green, blue }),
   };
 }
 
 export function mkBlueLens<X>(): Lens<RGB<X>, X> {
   return {
     get: ({ blue }): X => blue,
-    set: ({ red, green }, blue): RGB<X> => ({ red, green, blue })
+    set: ({ red, green }, blue): RGB<X> => ({ red, green, blue }),
   };
 }
 

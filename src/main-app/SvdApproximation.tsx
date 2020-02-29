@@ -1,5 +1,5 @@
-import imageSvd = require('./image-svd');
-import types = require('../shared/types');
+import imageSvd = require("./image-svd");
+import types = require("../shared/types");
 import { HoverCanvasView, HoverCanvasViewState, HoverCanvasViewProps } from "./HoverCanvasView";
 
 export interface SvdApproximationProps extends HoverCanvasViewProps {
@@ -22,18 +22,27 @@ export class SvdApproximation extends HoverCanvasView<SvdApproximationProps, Hov
       // invalidate cached image data
       this.imageData = null;
       this.products = null;
-    }
-    else if (this.products && nextProps.numSvs !== this.props.numSvs) {
+    } else if (this.products && nextProps.numSvs !== this.props.numSvs) {
       // update cached image data
       if (nextProps.numSvs > this.props.numSvs) {
         this.imageDataUpdates++;
-        imageSvd.multiplySvds(this.props.svds, this.products, this.props.numSvs, nextProps.numSvs, 1);
-      }
-      else if (this.props.numSvs - nextProps.numSvs < nextProps.numSvs) {
+        imageSvd.multiplySvds(
+          this.props.svds,
+          this.products,
+          this.props.numSvs,
+          nextProps.numSvs,
+          1,
+        );
+      } else if (this.props.numSvs - nextProps.numSvs < nextProps.numSvs) {
         this.imageDataUpdates++;
-        imageSvd.multiplySvds(this.props.svds, this.products, nextProps.numSvs, this.props.numSvs, -1);
-      }
-      else {
+        imageSvd.multiplySvds(
+          this.props.svds,
+          this.products,
+          nextProps.numSvs,
+          this.props.numSvs,
+          -1,
+        );
+      } else {
         // it is cheaper to compute from scratch
         this.products = null;
       }
@@ -41,11 +50,12 @@ export class SvdApproximation extends HoverCanvasView<SvdApproximationProps, Hov
     return true;
   }
   initProducts(): types.RGB<Float64Array> {
-    const n = this.props.width, m = this.props.height;
+    const n = this.props.width,
+      m = this.props.height;
     return {
       red: new Float64Array(m * n),
       green: new Float64Array(m * n),
-      blue: new Float64Array(m * n)
+      blue: new Float64Array(m * n),
     };
   }
   computeProductsFromScratch(): void {
@@ -57,8 +67,7 @@ export class SvdApproximation extends HoverCanvasView<SvdApproximationProps, Hov
   getProducts(): types.RGB<Float64Array> {
     if (this.products) {
       return this.products;
-    }
-    else {
+    } else {
       this.products = this.initProducts();
       this.computeProductsFromScratch();
       return this.products;
@@ -71,17 +80,17 @@ export class SvdApproximation extends HoverCanvasView<SvdApproximationProps, Hov
     }
   }
   paint(ctx: CanvasRenderingContext2D): void {
-    const n = this.props.width, m = this.props.height;
+    const n = this.props.width,
+      m = this.props.height;
     if (!ctx) {
       return;
     }
     if (this.state.hover && this.props.hoverToSeeOriginal) {
       ctx.drawImage(this.props.img, 0, 0, n, m);
-    }
-    else {
+    } else {
       if (!this.imageData) {
         // storing image data saves ~10ms
-        ctx.fillStyle = '#000';
+        ctx.fillStyle = "#000";
         ctx.fillRect(0, 0, n, m);
         this.imageData = ctx.getImageData(0, 0, n, m);
       }
@@ -89,7 +98,8 @@ export class SvdApproximation extends HoverCanvasView<SvdApproximationProps, Hov
       const { red, green, blue } = this.getProducts();
       for (let y = 0; y < m; y++) {
         for (let x = 0; x < n; x++) {
-          const i = y * n + x, j = 4 * i;
+          const i = y * n + x,
+            j = 4 * i;
           data[j] = red[i];
           data[j + 1] = green[i];
           data[j + 2] = blue[i];

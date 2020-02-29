@@ -1,7 +1,9 @@
-import protocol = require('../shared/svd-worker-protocol');
-import types = require('../shared/types');
+import protocol = require("../shared/svd-worker-protocol");
+import types = require("../shared/types");
 
-function start(): Worker { return new Worker('build/svd-worker.js'); }
+function start(): Worker {
+  return new Worker("build/svd-worker.js");
+}
 
 interface WorkerState {
   computingSvd: boolean;
@@ -15,9 +17,11 @@ function initWorker(): WorkerState {
   const s: WorkerState = {
     computingSvd: false,
     worker: start(),
-    onmessage: () => { /* do nothing */ },
+    onmessage: () => {
+      /* do nothing */
+    },
     approxSvd: null,
-    fullSvd: null
+    fullSvd: null,
   };
   s.worker.onmessage = (res): void => {
     s.onmessage(res);
@@ -28,12 +32,14 @@ function initWorker(): WorkerState {
 let state: types.RGB<WorkerState> = {
   red: initWorker(),
   green: initWorker(),
-  blue: initWorker()
+  blue: initWorker(),
 };
 
 export function computeSvds(
-  m: number, n: number, channels: types.RGB<Float64Array>,
-  callback: (res: types.SVDs64 & { approx: boolean }) => void
+  m: number,
+  n: number,
+  channels: types.RGB<Float64Array>,
+  callback: (res: types.SVDs64 & { approx: boolean }) => void,
 ): void {
   /* It would be great if the web worker API allowed one to simply abort the
       current task a worker is executing by e.g. throwing an exception in the
@@ -59,7 +65,7 @@ export function computeSvds(
           red: state.red.approxSvd,
           green: state.green.approxSvd,
           blue: state.blue.approxSvd,
-          approx: true
+          approx: true,
         });
       }
       s.onmessage = (msg): void => {
@@ -70,7 +76,7 @@ export function computeSvds(
             red: state.red.fullSvd,
             green: state.green.fullSvd,
             blue: state.blue.fullSvd,
-            approx: false
+            approx: false,
           });
         }
       };

@@ -1,4 +1,4 @@
-import types = require('./types');
+import types = require("./types");
 
 interface BaseReq<s> {
   msg: s;
@@ -17,12 +17,12 @@ export function makeSetInputReq(args: SetInputArgs): SetInputReq {
     msg: "set-input",
     a: args.a,
     m: args.m,
-    n: args.n
+    n: args.n,
   };
 }
 
 interface ComputeSVDArgs {
-    approx: boolean;
+  approx: boolean;
 }
 
 export type ComputeSVDReq = BaseReq<"compute-svd"> & ComputeSVDArgs;
@@ -30,7 +30,7 @@ export type ComputeSVDReq = BaseReq<"compute-svd"> & ComputeSVDArgs;
 export function makeComputeSVDReq(args: ComputeSVDArgs): ComputeSVDReq {
   return {
     msg: "compute-svd",
-    approx: args.approx
+    approx: args.approx,
   };
 }
 
