@@ -5,7 +5,7 @@
   "main": "ts/app.tsx",
   "scripts": {
     "build": "gulp",
-    "lint:check": "eslint . --ext .ts,.tsx",
+    "lint:check": "eslint . --ext .ts,.tsx --max-warnings 0",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
