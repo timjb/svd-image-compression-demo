@@ -1,28 +1,18 @@
-/// <reference path="../../node_modules/@types/emscripten/index.d.ts" />
+/* eslint-disable @typescript-eslint/camelcase */
+
+/// <reference types="emscripten" />
 
 import protocol = require('../shared/svd-worker-protocol');
 
 self.importScripts('../build/clapack.js');
 
 let input: null | {
-  a: Float64Array,
-  m: number,
-  n: number
+  a: Float64Array;
+  m: number;
+  n: number;
 } = null;
 
 console.log("worker started!");
-
-onmessage = function(msg: any) {
-  var data = msg.data as protocol.WorkerReq;
-  if (data.msg === "set-input") {
-    input = { a: new Float64Array(data.a), m: data.m, n: data.n };
-  } else if (data.msg === "compute-svd") {
-    if (!input) { throw new Error('set-input must come first!'); }
-    svd(input.a, input.m, input.n, data.approx);
-  } else {
-    throw new Error('unrecognized command!');
-  }
-};
 
 type ptr = number;
 
@@ -31,7 +21,7 @@ const svd_simple: (m: number, n: number, A: ptr, U: ptr, S: ptr, Vt: ptr) => num
 const svd_simple_approx: (m: number, n: number, t: number, A: ptr, U: ptr, S: ptr, Vt: ptr) => number =
   Module.cwrap('svd_simple_approx', 'number', ['number', 'number', 'number', 'number', 'number', 'number', 'number']);
 
-function svd (a: Float64Array, m: number, n: number, approx: boolean) {
+function svd (a: Float64Array, m: number, n: number, approx: boolean): void {
   const d = approx ? Math.min(Math.min(m, n), 50) : Math.min(m, n);
   const sizeof_double = 8;
   const buf = Module.HEAPU8.buffer;
@@ -64,3 +54,15 @@ function svd (a: Float64Array, m: number, n: number, approx: boolean) {
   Module._free(ptr_s);
   Module._free(ptr_vt);
 }
+
+onmessage = (event: MessageEvent): void => {
+  const data = event.data as protocol.WorkerReq;
+  if (data.msg === "set-input") {
+    input = { a: new Float64Array(data.a), m: data.m, n: data.n };
+  } else if (data.msg === "compute-svd") {
+    if (!input) { throw new Error('set-input must come first!'); }
+    svd(input.a, input.m, input.n, data.approx);
+  } else {
+    throw new Error('unrecognized command!');
+  }
+};

@@ -6,7 +6,7 @@
     "module": "commonjs",
     "target": "es5",
     "lib": ["webworker", "es5"],
-    "types": ["emscripten"]
+    "types": []
   },
   "files": [
     "./svd-worker.ts",

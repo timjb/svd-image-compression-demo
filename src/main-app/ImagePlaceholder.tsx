@@ -25,11 +25,11 @@ function randomColorFromImg(img: HTMLImageElement): string {
 export interface ImagePlaceholderProps {
   width: number;
   height: number;
-  img: HTMLImageElement
+  img: HTMLImageElement;
 }
 
 export class ImagePlaceholder extends React.Component<ImagePlaceholderProps, {}> {
-  render() {
+  render(): JSX.Element {
     const color = randomColorFromImg(this.props.img);
     const style = {
       width: this.props.width,

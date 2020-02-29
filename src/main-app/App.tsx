@@ -36,9 +36,9 @@ function toFloat32Svds(svds: types.SVDs64): types.SVDs {
   };
 }
 
-function loadImage(src: string, callback: (img: HTMLImageElement) => void) {
+function loadImage(src: string, callback: (img: HTMLImageElement) => void): void {
   const img = new Image();
-  img.onload = function () { callback(img); };
+  img.onload = (): void => { callback(img); };
   if (/^http/.test(src)) {
     console.log('cors');
     // absolute url: use CORS proxy http://crossorigin.me
@@ -52,7 +52,7 @@ function loadImage(src: string, callback: (img: HTMLImageElement) => void) {
 
 function galleryShowsGuessingPage(slideNum: number): boolean {
     return slideNum === 10;
-};
+}
 
 function getImageData(img: HTMLImageElement): ImageData {
   const canvas = document.createElement('canvas');
@@ -70,7 +70,7 @@ const firstImg = {
 };
 
 type Indexable<V> = {
-  [key: number]: V
+  [key: number]: V;
   length: number;
 }
 
@@ -100,7 +100,7 @@ export class App extends React.Component<{}, AppState> {
 
   private svdViewRef: React.RefObject<SvdApproximation>;
 
-  constructor(props: any) {
+  constructor(props: {}) {
     super(props);
     this.state = {
       width: firstImg.w,
@@ -119,19 +119,19 @@ export class App extends React.Component<{}, AppState> {
     this.svdViewRef = React.createRef();
   }
 
-  componentDidMount() {
+  componentDidMount(): void {
     window.ondragover = this.onDragOver.bind(this);
     this.loadImage(firstImg.src, firstImg.approxSrc);
   }
 
-  initializeImage(img: HTMLImageElement) {
+  initializeImage(img: HTMLImageElement): void {
     const {width, height} = img;
 
     let imageData: ImageData;
     try {
       imageData = getImageData(img);
     } catch (exc) {
-      if (exc.message.match(/(tainted|cross\-origin|insecure)/)) {
+      if (exc.message.match(/(tainted|cross-origin|insecure)/)) {
         return window.alert("Due to browser limitations (cross-origin policy), it isn't possible use pictures dragged from other sites. You have to save the image locally before you can use it.");
       }
       throw exc; // rethrow
@@ -150,12 +150,12 @@ export class App extends React.Component<{}, AppState> {
     });
   }
 
-  loadImage(url: string, placeholderImg: null | string = null) {
+  loadImage(url: string, placeholderImg: null | string = null): void {
     this.setState({ placeholderImg } as AppState);
     loadImage(url, this.initializeImage.bind(this));
   }
 
-  onDragOver(evt: React.DragEvent<HTMLElement> | DragEvent) {
+  onDragOver(evt: React.DragEvent<HTMLElement> | DragEvent): void {
     // without this, the drop event would not fire on the element!
     evt.preventDefault();
 
@@ -169,11 +169,11 @@ export class App extends React.Component<{}, AppState> {
     }
   }
 
-  onDragLeave(evt: React.MouseEvent<HTMLElement>) {
+  onDragLeave(): void {
     this.setState({ hover: false, error: "" } as AppState);
   }
 
-  onDrop(evt: React.DragEvent<HTMLElement>) {
+  onDrop(evt: React.DragEvent<HTMLElement>): void {
     this.setState({ hover: false } as AppState);
     evt.preventDefault();
 
@@ -185,7 +185,7 @@ export class App extends React.Component<{}, AppState> {
     }
   }
 
-  onFileChosen(file: File) {
+  onFileChosen(file: File): void {
     if (!file.type.match(/^image\/.*/)) {
       const error = "The chosen file is not an image! Try another file ...";
       this.setState({ error } as AppState);
@@ -193,41 +193,41 @@ export class App extends React.Component<{}, AppState> {
     }
     this.setState({ error: "" } as AppState);
     const reader = new FileReader();
-    reader.onload = (evt: Event) => {
+    reader.onload = (evt: Event): void => {
       const target = evt.target as EventTarget & { result: string };
       this.loadImage(target.result);
     };
     reader.readAsDataURL(file);
   }
 
-  onUpdateSvs(numSvs: number) {
+  onUpdateSvs(numSvs: number): void {
     this.setState({ numSvs: numSvs } as AppState);
   }
 
-  onChangeSvs(numSvs: number) {
+  onChangeSvs(): void {
     window.setTimeout(() => {
       this.svdViewRef.current?.refreshImageData();
     }, 400);
   }
 
-  clickShowSvs(evt: React.MouseEvent<HTMLElement>) {
+  clickShowSvs(evt: React.MouseEvent<HTMLElement>): void {
     evt.preventDefault();
     this.setState({ showSvs: !this.state.showSvs } as AppState);
   }
 
-  clickHoverToSeeOriginal(evt: React.MouseEvent<HTMLElement>) {
+  clickHoverToSeeOriginal(evt: React.MouseEvent<HTMLElement>): void {
     evt.preventDefault();
     this.setState({ hoverToSeeOriginal: !this.state.hoverToSeeOriginal } as AppState);
   }
 
-  onClickGallery(img: FullGalleryImageDesc) {
+  onClickGallery(img: FullGalleryImageDesc): void {
     if (img.quiz) {
       this.setState({ numSvs: 1 } as AppState);
     }
     this.loadImage(img.url);
   }
 
-  onScrollGallery(slideNum: number) {
+  onScrollGallery(slideNum: number): void {
     const guessingPage = galleryShowsGuessingPage(slideNum);
     const transition = this.state.guessingPage !== guessingPage;
     if (transition) {
@@ -238,7 +238,7 @@ export class App extends React.Component<{}, AppState> {
     }
   }
 
-  render() {
+  render(): JSX.Element {
     const w = this.state.width, h = this.state.height;
     const {img, placeholderImg, numSvs} = this.state;
 
@@ -271,7 +271,7 @@ export class App extends React.Component<{}, AppState> {
            onDrop={this.onDrop.bind(this)} />
     );
 
-    let mainImageView: null | React.Component<any, any> | JSX.Element = null;
+    let mainImageView: null | React.Component | JSX.Element = null;
     let maxSvs: number;
     if (this.state.svds && img) {
       mainImageView = <SvdApproximation ref={this.svdViewRef}

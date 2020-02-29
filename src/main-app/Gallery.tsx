@@ -1,13 +1,13 @@
 import * as React from "react";
 import Slider from "react-slick";
 
-const preload: (src: string) => void = (() => {
+const preload: (src: string) => void = ((): ((src: string) => void) => {
   const preloaded: { [src: string]: boolean } = {};
 
-  return function(src: string) {
+  return (src: string): void => {
     if (preloaded[src]) { return; }
     const img = new Image();
-    img.onload = function () {
+    img.onload = (): void => {
       preloaded[src] = true;
       console.log("Preloaded image '" + src + "'");
     };
@@ -33,8 +33,8 @@ export interface FullGalleryImageDesc extends GalleryImageDesc {
 }
 
 export interface GalleryProps {
-  onClick: (imgDesc: FullGalleryImageDesc) => void
-  onScroll: (imgNum: number) => void
+  onClick: (imgDesc: FullGalleryImageDesc) => void;
+  onScroll: (imgNum: number) => void;
 }
 
 export class Gallery extends React.Component<GalleryProps, {}> {
@@ -140,14 +140,14 @@ export class Gallery extends React.Component<GalleryProps, {}> {
       };
     }));
   }
-  renderImage(img: FullGalleryImageDesc) {
-    const onClick = (evt: React.MouseEvent<HTMLElement>) => {
+  renderImage(img: FullGalleryImageDesc): JSX.Element {
+    const onClick = (evt: React.MouseEvent<HTMLElement>): void => {
       evt.preventDefault();
       if (this.props.onClick) {
         this.props.onClick(img);
       }
     };
-    const onMouseOver = () => { preload(img.url); };
+    const onMouseOver = (): void => { preload(img.url); };
     return (<div className="image" key={img.name}>
       <a href={img.url} onClick={onClick} onMouseOver={onMouseOver}>
         <img width={img.width} height={img.height} src={img.preview} />
@@ -159,8 +159,8 @@ export class Gallery extends React.Component<GalleryProps, {}> {
       </p>
     </div>);
   }
-  render() {
-    return (<Slider className="gallery" slidesToShow={5} slidesToScroll={5} draggable={false} infinite={false} afterChange={(this.props.onScroll as () => void) || (() => { }) /* we need the type assertion here because the typing definition is wrong */}>
+  render(): JSX.Element {
+    return (<Slider className="gallery" slidesToShow={5} slidesToScroll={5} draggable={false} infinite={false} afterChange={this.props.onScroll}>
       {this.getImages().map(this.renderImage.bind(this))}
     </Slider>);
   }

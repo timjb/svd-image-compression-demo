@@ -1,7 +1,7 @@
 import types = require('./types');
 
 interface BaseReq<s> {
-  msg: s
+  msg: s;
 }
 
 export interface SetInputArgs {

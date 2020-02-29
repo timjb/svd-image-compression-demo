@@ -11,7 +11,7 @@ export class SingularValuesDiagram extends HoverCanvasView<SingularValuesDiagram
     super(props);
     this.state = { hover: false };
   }
-  paint(ctx: CanvasRenderingContext2D) {
+  paint(ctx: CanvasRenderingContext2D): void {
     const w = this.props.width, h = this.props.height;
     if (!ctx) {
       return;

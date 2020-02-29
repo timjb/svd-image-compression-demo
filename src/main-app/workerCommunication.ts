@@ -15,11 +15,11 @@ function initWorker(): WorkerState {
   const s: WorkerState = {
     computingSvd: false,
     worker: start(),
-    onmessage: () => {},
+    onmessage: () => { /* do nothing */ },
     approxSvd: null,
     fullSvd: null
   };
-  s.worker.onmessage = (res) => {
+  s.worker.onmessage = (res): void => {
     s.onmessage(res);
   };
   return s;
@@ -34,13 +34,13 @@ let state: types.RGB<WorkerState> = {
 export function computeSvds(
   m: number, n: number, channels: types.RGB<Float64Array>,
   callback: (res: types.SVDs64 & { approx: boolean }) => void
-) {
+): void {
   /* It would be great if the web worker API allowed one to simply abort the
       current task a worker is executing by e.g. throwing an exception in the
       worker. With this, all the initialization and memory allocation of
       Emscripten associated with a complete restart could be avoided. */
 
-  function helper(mkColorLens: <X>() => types.Lens<types.RGB<X>, X>) {
+  function helper(mkColorLens: <X>() => types.Lens<types.RGB<X>, X>): void {
     const workerStateLens = mkColorLens<WorkerState>();
     let s = workerStateLens.get(state);
     if (s.computingSvd) {
@@ -52,7 +52,7 @@ export function computeSvds(
     }
     const buffer = mkColorLens<Float64Array>().get(channels).buffer;
     s.worker.postMessage(protocol.makeSetInputReq({ a: buffer, m: m, n: n }), [buffer]);
-    s.onmessage = function (msg) {
+    s.onmessage = (msg): void => {
       s.approxSvd = msg.data as protocol.WorkerRes;
       if (state.red.approxSvd && state.green.approxSvd && state.blue.approxSvd) {
         callback({
@@ -62,7 +62,7 @@ export function computeSvds(
           approx: true
         });
       }
-      s.onmessage = function (msg) {
+      s.onmessage = (msg): void => {
         s.fullSvd = msg.data;
         s.computingSvd = false;
         if (state.red.fullSvd && state.green.fullSvd && state.blue.fullSvd) {
@@ -82,4 +82,4 @@ export function computeSvds(
   helper(types.mkRedLens);
   helper(types.mkGreenLens);
   helper(types.mkBlueLens);
-};
+}

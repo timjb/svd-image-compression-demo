@@ -16,7 +16,7 @@ export function imageDataToPixels(imageData: ImageData): types.RGB<Float64Array>
     }
   }
   return { red: red, green: green, blue: blue };
-};
+}
 
 // updates the image data to include (f=1) or exclude (f=-1)
 // svs in range [l, u)
@@ -26,12 +26,12 @@ export function multiplySvds(
   l: number,
   u: number,
   sign: number // one of [1,-1]
-) {
+): void {
   const timerName = "multiplySvds" + (Math.round(Math.random() * 100));
   console.time(timerName);
-  
+
   const redSvd = svds.red, greenSvd = svds.green, blueSvd = svds.blue;
-  var {n, m, d} = redSvd;
+  const {n, m, d} = redSvd;
   u = Math.min(u, d);
   const redU = redSvd.u, redVt = redSvd.vt, redS = redSvd.s;
   const greenU = greenSvd.u, greenVt = greenSvd.vt, greenS = greenSvd.s;
@@ -53,6 +53,6 @@ export function multiplySvds(
       blueProd[i]  += b*sign;
     }
   }
-  
+
   console.timeEnd(timerName);
-};
+}

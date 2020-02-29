@@ -6,18 +6,18 @@ export interface SvdApproximationProps extends HoverCanvasViewProps {
   numSvs: number;
   hoverToSeeOriginal: boolean;
   img: HTMLImageElement;
-  svds: types.SVDs
+  svds: types.SVDs;
 }
 
 export class SvdApproximation extends HoverCanvasView<SvdApproximationProps, HoverCanvasViewState> {
   private products: null | types.RGB<Float64Array> = null;
   private imageData: null | ImageData = null;
-  private imageDataUpdates: number = 0;
+  private imageDataUpdates = 0;
   constructor(props: SvdApproximationProps) {
     super(props);
     this.state = { hover: false };
   }
-  shouldComponentUpdate(nextProps: SvdApproximationProps, nextState: HoverCanvasViewState) {
+  shouldComponentUpdate(nextProps: SvdApproximationProps): boolean {
     if (nextProps.svds !== this.props.svds) {
       // invalidate cached image data
       this.imageData = null;
@@ -48,7 +48,7 @@ export class SvdApproximation extends HoverCanvasView<SvdApproximationProps, Hov
       blue: new Float64Array(m * n)
     };
   }
-  computeProductsFromScratch() {
+  computeProductsFromScratch(): void {
     if (this.products) {
       imageSvd.multiplySvds(this.props.svds, this.products, 0, this.props.numSvs, 1);
       this.imageDataUpdates = 0;
@@ -64,13 +64,13 @@ export class SvdApproximation extends HoverCanvasView<SvdApproximationProps, Hov
       return this.products;
     }
   }
-  refreshImageData() {
+  refreshImageData(): void {
     if (this.imageDataUpdates >= 20) {
       this.computeProductsFromScratch();
       this.doPaint();
     }
   }
-  paint(ctx: CanvasRenderingContext2D) {
+  paint(ctx: CanvasRenderingContext2D): void {
     const n = this.props.width, m = this.props.height;
     if (!ctx) {
       return;
