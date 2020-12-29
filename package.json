@@ -7,8 +7,8 @@
     "build": "webpack --config webpack.config.js --mode=production",
     "lint:check": "eslint . --ext .ts,.tsx --max-warnings 0",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
-    "prettier:check": "prettier --check \"src/**/*.{ts,tsx}\" \"*.js\"",
-    "prettier:fix": "prettier --write \"src/**/*.{ts,tsx}\" \"*.js\"",
+    "prettier:check": "prettier --check \"src/**/*.{ts,tsx,json}\" \"*.{js,json}\"",
+    "prettier:fix": "prettier --write \"src/**/*.{ts,tsx,json}\" \"*.{js,json}\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
