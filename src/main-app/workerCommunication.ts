@@ -1,8 +1,9 @@
-import protocol = require("../shared/svd-worker-protocol");
-import types = require("../shared/types");
+import * as protocol from "../shared/svd-worker-protocol";
+import * as types from "../shared/types";
+import SvdWorker from "worker-loader!../web-worker/svd-worker";
 
 function start(): Worker {
-  return new Worker("build/svd-worker.js");
+  return new SvdWorker();
 }
 
 interface WorkerState {

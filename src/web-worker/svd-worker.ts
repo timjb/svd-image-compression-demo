@@ -1,6 +1,6 @@
 /// <reference types="emscripten" />
 
-import protocol = require("../shared/svd-worker-protocol");
+import * as protocol from "../shared/svd-worker-protocol";
 
 self.importScripts("../build/clapack.js");
 

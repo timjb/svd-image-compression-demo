@@ -6,9 +6,9 @@
   <meta charset="UTF-8" />
   <title>SVD-Demo: Image Compression</title>
   <link rel="shortcut icon" type="image/png" href="favicon.png" />
-  <link rel="stylesheet" href="build/nouislider.min.css" />
-  <link rel="stylesheet" href="build/slick.css" />
-  <link rel="stylesheet" href="build/slick-theme.css" />
+  <link rel="stylesheet" href="dist/nouislider.min.css" />
+  <link rel="stylesheet" href="dist/slick.css" />
+  <link rel="stylesheet" href="dist/slick-theme.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 
@@ -178,21 +178,7 @@
     </div>
   </div>
 
-  <script src="build/react.production.min.js"></script>
-  <script src="build/react-dom.production.min.js"></script>
-  <script>
-    // Hack
-    function require(moduleName) {
-      if (moduleName === 'react') {
-        return React;
-      } else if (moduleName === 'react-dom') {
-        return ReactDOM;
-      } else {
-        throw new Error("could not find module '" + moduleName + "'!");
-      }
-    }
-  </script>
-  <script src="build/index.js"></script>
+  <script src="dist/main.js"></script>
 </body>
 
 </html>

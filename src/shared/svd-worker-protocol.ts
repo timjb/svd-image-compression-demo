@@ -1,4 +1,4 @@
-import types = require("./types");
+import * as types from "./types";
 
 interface BaseReq<s> {
   msg: s;

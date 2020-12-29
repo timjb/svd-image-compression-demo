@@ -1,16 +1,11 @@
 {
+  "extends": "../generic-tsconfig.json",
   "compilerOptions": {
-    "sourceMap": true,
-    "strict": true,
-    "noFallthroughCasesInSwitch": true,
-    "module": "commonjs",
-    "target": "es5",
-    "lib": ["webworker", "es5"],
-    "types": []
+    "lib": ["webworker", "es5"]
   },
-  "files": [
-    "./svd-worker.ts",
-    "../shared/svd-worker-protocol.ts",
-    "../shared/types.ts"
+  "references": [
+    {
+      "path": "../shared"
+    }
   ]
 }

@@ -1,5 +1,5 @@
-import imageSvd = require("./image-svd");
-import types = require("../shared/types");
+import * as imageSvd from "./image-svd";
+import * as types from "../shared/types";
 import { HoverCanvasView, HoverCanvasViewState, HoverCanvasViewProps } from "./HoverCanvasView";
 
 export interface SvdApproximationProps extends HoverCanvasViewProps {

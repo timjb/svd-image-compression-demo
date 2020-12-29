@@ -1,26 +1,11 @@
 {
+  "extends": "../generic-tsconfig.json",
   "compilerOptions": {
-    "sourceMap": true,
-    "strict": true,
-    "noFallthroughCasesInSwitch": true,
-    "module": "commonjs",
-    "lib": ["DOM", "ES2015", "ScriptHost"],
-    "target": "es5",
-    "jsx": "react"
+    "lib": ["DOM", "ES2015", "ScriptHost"]
   },
-  "files": [
-    "../shared/svd-worker-protocol.ts",
-    "../shared/types.ts",
-    "./App.tsx",
-    "./FileInputField.tsx",
-    "./Gallery.tsx",
-    "./HoverCanvasView.tsx",
-    "./image-svd.ts",
-    "./ImagePlaceholder.tsx",
-    "./index.tsx",
-    "./SingularValuesDiagram.tsx",
-    "./SingularValuesSlider.tsx",
-    "./SvdApproximation.tsx",
-    "./workerCommunication.ts"
+  "references": [
+    {
+      "path": "../shared"
+    }
   ]
 }

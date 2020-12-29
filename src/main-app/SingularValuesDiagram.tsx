@@ -1,5 +1,5 @@
 import { HoverCanvasView, HoverCanvasViewState, HoverCanvasViewProps } from "./HoverCanvasView";
-import types = require("../shared/types");
+import * as types from "../shared/types";
 
 export interface SingularValuesDiagramProps extends HoverCanvasViewProps {
   svds: types.SVDs;

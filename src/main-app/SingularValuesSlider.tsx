@@ -10,7 +10,7 @@ import * as noUiSlider from "nouislider";
 function debounce(func: () => void, wait: number, immediate = false): () => void {
   const getNow = Date.now || ((): number => new Date().getTime());
 
-  let timeout: null | number, timestamp: number;
+  let timeout: null | ReturnType<typeof setTimeout>, timestamp: number;
 
   const later = (): void => {
     const last = getNow() - timestamp;

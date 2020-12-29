@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Gallery, FullGalleryImageDesc } from "./Gallery";
-import imageSvd = require("./image-svd");
-import types = require("../shared/types");
+import * as imageSvd from "./image-svd";
+import * as types from "../shared/types";
 import { SingularValuesSlider } from "./SingularValuesSlider";
 import { FileInputField } from "./FileInputField";
 import { computeSvds } from "./workerCommunication";
