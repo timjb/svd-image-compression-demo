@@ -15,10 +15,10 @@ function writeOut(canvas, outfile) {
   var out = fs.createWriteStream(outfile);
   var stream = canvas.pngStream();
 
-  stream.on("data", function(chunk) {
+  stream.on("data", function (chunk) {
     out.write(chunk);
   });
-  stream.on("end", function() {
+  stream.on("end", function () {
     console.log("saved png");
   });
 }
@@ -56,7 +56,7 @@ function main() {
   var outfile = args[1];
   var numSvs = parseInt(args[2], 10);
 
-  fs.readFile(imageFile, function(err, src) {
+  fs.readFile(imageFile, function (err, src) {
     if (err) {
       throw err;
     }

@@ -157,7 +157,7 @@ export class App extends React.Component<AppProps, AppState> {
     this.setState({ width, height, img, svds: null, error: "" } as AppState);
     const pxls = imageSvd.imageDataToPixels(imageData);
 
-    computeSvds(height, width, pxls, svds => {
+    computeSvds(height, width, pxls, (svds) => {
       this.setState({ svds: toFloat32Svds(svds), approx: svds.approx } as AppState);
     });
   }
