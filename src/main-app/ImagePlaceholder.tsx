@@ -33,7 +33,7 @@ export interface ImagePlaceholderProps {
   img: HTMLImageElement;
 }
 
-export class ImagePlaceholder extends React.Component<ImagePlaceholderProps, {}> {
+export class ImagePlaceholder extends React.Component<ImagePlaceholderProps> {
   render(): JSX.Element {
     const color = randomColorFromImg(this.props.img);
     const style = {

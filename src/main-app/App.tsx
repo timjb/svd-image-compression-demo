@@ -103,10 +103,12 @@ interface AppState {
   svds: null | types.SVDs;
 }
 
-export class App extends React.Component<{}, AppState> {
+type AppProps = Record<string, unknown>;
+
+export class App extends React.Component<AppProps, AppState> {
   private svdViewRef: React.RefObject<SvdApproximation>;
 
-  constructor(props: {}) {
+  constructor(props: AppProps) {
     super(props);
     this.state = {
       width: firstImg.w,

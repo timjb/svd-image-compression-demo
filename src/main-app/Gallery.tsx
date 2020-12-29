@@ -39,7 +39,7 @@ export interface GalleryProps {
   onScroll: (imgNum: number) => void;
 }
 
-export class Gallery extends React.Component<GalleryProps, {}> {
+export class Gallery extends React.Component<GalleryProps> {
   getImages(): FullGalleryImageDesc[] {
     function quiz(obj: GalleryImageDesc): GalleryImageDesc {
       obj.preview = "images/question_mark_small.jpg";

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/camelcase */
-
 /// <reference types="emscripten" />
 
 import protocol = require("../shared/svd-worker-protocol");

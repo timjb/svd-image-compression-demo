@@ -43,7 +43,7 @@ export interface SVSliderProps {
   onChange: (svs: number) => void;
 }
 
-export class SingularValuesSlider extends React.Component<SVSliderProps, {}> {
+export class SingularValuesSlider extends React.Component<SVSliderProps> {
   private sliderElRef: React.RefObject<HTMLDivElement>;
   constructor(props: SVSliderProps) {
     super(props);
