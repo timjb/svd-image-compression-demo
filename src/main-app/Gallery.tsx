@@ -42,7 +42,7 @@ export interface GalleryProps {
 export class Gallery extends React.Component<GalleryProps> {
   getImages(): FullGalleryImageDesc[] {
     function quiz(obj: GalleryImageDesc): GalleryImageDesc {
-      obj.preview = "images/question_mark_small.jpg";
+      obj.preview = "question_mark_small.jpg";
       obj.quiz = true;
       return obj;
     }
@@ -78,8 +78,8 @@ export class Gallery extends React.Component<GalleryProps> {
         source: "https://en.wikipedia.org/wiki/Royal_Stewart_tartan",
       },
       {
-        url: "images/randbitmap-rdo_medium.png",
-        preview: "images/randbitmap-rdo_small.png",
+        url: "example-images/randbitmap-rdo_medium.png",
+        preview: "example-images/randbitmap-rdo_small.png",
         caption: "Random data",
         source: "https://www.random.org/bitmaps/",
       },
@@ -91,8 +91,8 @@ export class Gallery extends React.Component<GalleryProps> {
       },
       {
         caption: "Made with the KC-O-M",
-        url: "images/keep-calm-and-use-svd_medium.png",
-        preview: "images/keep-calm-and-use-svd_small.png",
+        url: "example-images/keep-calm-and-use-svd_medium.png",
+        preview: "example-images/keep-calm-and-use-svd_small.png",
         source: "http://www.keepcalm-o-matic.co.uk/",
       },
       {
@@ -135,8 +135,8 @@ export class Gallery extends React.Component<GalleryProps> {
         name: obj.name ?? "image-" + i,
         width: 150,
         height: 150,
-        url: obj.url ?? "images/" + obj.name + "_medium.jpg",
-        preview: obj.preview ?? "images/" + obj.name + "_small.jpg",
+        url: obj.url ?? "example-images/" + obj.name + "_medium.jpg",
+        preview: obj.preview ?? "example-images/" + obj.name + "_small.jpg",
         caption: obj.caption,
         source: obj.source,
         quiz: !!obj.quiz,

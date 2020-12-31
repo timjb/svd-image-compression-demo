@@ -70,8 +70,8 @@ function getImageData(img: HTMLImageElement): ImageData {
 const firstImg = {
   w: 600,
   h: 402,
-  src: "images/mountains_sea.jpg",
-  approxSrc: "images/mountains_sea_5svs.jpg",
+  src: "example-images/mountains_sea.jpg",
+  approxSrc: "example-images/mountains_sea_5svs.jpg",
 };
 
 type Indexable<V> = {
@@ -266,7 +266,7 @@ export class App extends React.Component<AppProps, AppState> {
       infoBar = (
         <span>
           Showing approximate SVD &nbsp;
-          <img src="deps/spinner.gif" width="16" height="16" />
+          <img src="spinner.gif" width="16" height="16" />
           &nbsp; Computing precise result &hellip;
         </span>
       );

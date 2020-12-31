@@ -1,8 +1,4 @@
 .DS_Store
-build/.module-cache
-*.bc
-*.o
-*.a
-.sass-cache
 node_modules
 .vscode
+dist

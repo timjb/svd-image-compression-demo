@@ -31,6 +31,7 @@ module.exports = {
         { context: "node_modules/slick-carousel/slick", from: "{slick,slick-theme}.css" },
         { context: "node_modules/slick-carousel/slick", from: "fonts/slick.*" },
         { context: "node_modules/nouislider/distribute", from: "nouislider.min.css" },
+        { context: "public", from: "**/*" },
       ],
     }),
   ],

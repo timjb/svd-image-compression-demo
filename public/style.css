@@ -308,7 +308,7 @@ h2 { font-size: 15px; line-height: 36px; margin: 0; }
 .matrix:hover,
 .matrix:hover .range,
 .matrix:hover .sv.unimportant {
-  background-image: url(images/matrix_grid.png);
+  background-image: url(matrix_grid.png);
 }
 
 .matrix .rows,

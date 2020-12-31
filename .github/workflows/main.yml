@@ -1,15 +1,41 @@
 name: CI
 
-on: [push]
+on:
+  push:
+    branches-ignore:
+    - gh-pages
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v1
+    - name: Checkout 🛎️
+      uses: actions/checkout@v2
+    - name: Install Nix ❄️
+      uses: cachix/install-nix-action@v12
       with:
-        node-version: 12.x
-    - run: npm install
-    - run: npm run lint:check
-    - run: npm run prettier:check
+        nix_path: nixpkgs=channel:nixos-20.09
+    - name: Setup Nix Shell
+      run: nix-shell --command 'echo All Nix Dependencies have been installed'
+    - name: Build WASM package
+      run: |
+        nix-shell --command '
+          cd svd-image-compression-worker
+          wasm-pack build
+        '
+    - name: Install NPM Dependencies
+      run: nix-shell --command 'npm ci'
+    - name: Webpack build
+      run: nix-shell --command 'npm run build'
+    - name: ESLint Check
+      run: nix-shell --command 'npm run lint:check'
+      continue-on-error: true
+    - name: Prettier Formatting Check
+      run: nix-shell --command 'npm run prettier:check'
+      continue-on-error: true
+    - name: Deploy to GitHub Pages 🚀
+      uses: JamesIves/github-pages-deploy-action@3.7.1
+      with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        BRANCH: gh-pages
+        FOLDER: dist
