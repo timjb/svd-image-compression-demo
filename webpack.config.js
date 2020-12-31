@@ -34,4 +34,9 @@ module.exports = {
       ],
     }),
   ],
+  experiments: {
+    // this option is deprecated in favor of 'asyncWebAssembly', but unfortunately
+    // 'asyncWebAssembly' doesn't work because of https://github.com/rustwasm/wasm-bindgen/issues/2343
+    syncWebAssembly: true,
+  },
 };

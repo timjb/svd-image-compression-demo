@@ -96,13 +96,14 @@ export class SvdApproximation extends HoverCanvasView<SvdApproximationProps, Hov
       }
       const data = this.imageData.data;
       const { red, green, blue } = this.getProducts();
+      let j = 0;
       for (let y = 0; y < m; y++) {
         for (let x = 0; x < n; x++) {
-          const i = y * n + x,
-            j = 4 * i;
-          data[j] = red[i];
-          data[j + 1] = green[i];
-          data[j + 2] = blue[i];
+          const l = m * x + y;
+          data[j] = red[l];
+          data[j + 1] = green[l];
+          data[j + 2] = blue[l];
+          j += 4;
         }
       }
       ctx.putImageData(this.imageData, 0, 0);

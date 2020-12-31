@@ -3,7 +3,7 @@
     "sourceMap": true,
     "strict": true,
     "noFallthroughCasesInSwitch": true,
-    "module": "commonjs",
+    "module": "esnext",
     "lib": ["ES2015"],
     "target": "es5",
     "jsx": "react"

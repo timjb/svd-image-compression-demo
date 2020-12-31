@@ -60,7 +60,7 @@ export function multiplySvds(
         b += blueU[k * m + y] * blueS[k] * blueVt[x * d + k];
       }
 
-      const i = y * n + x;
+      const i = y + x * m;
       redProd[i] += r * sign;
       greenProd[i] += g * sign;
       blueProd[i] += b * sign;

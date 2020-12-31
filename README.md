@@ -9,5 +9,5 @@ $ npm install
 and run
 
 ```bash
-$ npm run build
+$ npm run build-all
 ```

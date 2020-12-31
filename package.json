@@ -5,6 +5,7 @@
   "main": "ts/app.tsx",
   "scripts": {
     "build": "webpack --config webpack.config.js --mode=production",
+    "build-all": "cd svd-image-compression-worker && wasm-pack build && npm run build",
     "lint:check": "eslint . --ext .ts,.tsx --max-warnings 0",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "prettier:check": "prettier --check \"src/**/*.{ts,tsx,json}\" \"*.{js,json}\"",
@@ -26,10 +27,10 @@
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-slick": "^0.27.13",
-    "slick-carousel": "^1.8.1"
+    "slick-carousel": "^1.8.1",
+    "svd-image-compression-worker": "file:svd-image-compression-worker/pkg"
   },
   "devDependencies": {
-    "@types/emscripten": "0.0.34",
     "@types/nouislider": "^9.0.7",
     "@types/react": "^17.0.0",
     "@types/react-dom": "^17.0.0",
