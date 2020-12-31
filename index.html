@@ -1,0 +1,184 @@
+<!doctype html>
+
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <title>SVD-Demo: Image Compression</title>
+  <link rel="shortcut icon" type="image/png" href="favicon.png" />
+  <link rel="stylesheet" href="nouislider.min.css" />
+  <link rel="stylesheet" href="slick.css" />
+  <link rel="stylesheet" href="slick-theme.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="wrapper">
+    <h1>
+      Image Compression with<br />
+      Singular Value Decomposition
+    </h1>
+    <noscript>The interactive demo runs purely on the client-side. You therefore have to enable JavaScript to enjoy it.</noscript>
+  </div>
+
+  <div class="app" id="app"></div>
+
+  <div class="wrapper">
+    <div class="explanation clearfix">
+      <div class="left-column">
+        <h2>About Singular Value Decomposition</h2>
+        <p>
+          A matrix of size <span class="math">m&thinsp;&times;&thinsp;n</span> is a grid of real numbers consisting of <span class="math">m</span> rows and <span class="math">n</span> columns.
+          In linear algebra, a branch of mathematics, matrices of size <span class="math">m&thinsp;&times;&thinsp;n</span> describe linear mappings from <span class="math">n</span>-dimensional to <span class="math">m</span>-dimensional space.
+          The word linear roughly means that straight lines map to straight lines and the origin in <span class="math">n</span>&#8209;dimensional space maps to the origin in <span class="math">m</span>&#8209;dimensional space.
+          When we have an <span class="math">(m&thinsp;&times;&thinsp;n)</span>&#8209;matrix <span class="math">A</span> and a <span class="math">(n&thinsp;&times;&thinsp;k)</span>&#8209;matrix <span class="math">B</span>, we can compute the product <span class="math">AB</span> which is an <span class="math">(m&thinsp;&times;&thinsp;k)</span>&#8209;matrix.
+          The mapping corresponding to <span class="math">AB</span> is exactly the composition of the mappings corresponding to <span class="math">A</span> and <span class="math">B</span> respectively.
+        </p>
+        <p>
+          <a href="https://en.wikipedia.org/wiki/Singular_value_decomposition">Singular Value Decomposition</a> (SVD) states that every <span class="math">(m&thinsp;&times;&thinsp;n)</span>&#8209;matrix <span class="math">A</span> can be written as a product
+        </p>
+        <div class="schema schema-a">
+          <div class="matrix matrix-a">
+            <div class="rows">m</div>
+            <div class="cols">n</div>
+            A
+          </div>
+          <div class="equals">=</div>
+          <div class="matrix matrix-u">
+            <div class="rows">m</div>
+            <div class="cols">m</div>
+            U
+          </div>
+          <div class="mult-dot mult-dot-1"></div>
+          <div class="matrix matrix-sigma">
+            <div class="rows">m</div>
+            <div class="cols">n</div>
+            <div class="sv" style="left: 0px; top: 0px;"></div>
+            <div class="sv" style="left: 5px; top: 5px;"></div>
+            <div class="sv" style="left: 10px; top: 10px;"></div>
+            <div class="sv" style="left: 15px; top: 15px;"></div>
+            <div class="sv" style="left: 20px; top: 20px;"></div>
+            <div class="sv" style="left: 25px; top: 25px;"></div>
+            <div class="sv" style="left: 30px; top: 30px;"></div>
+            <div class="sv" style="left: 35px; top: 35px;"></div>
+            <div class="sv" style="left: 40px; top: 40px;"></div>
+            <div class="sv" style="left: 45px; top: 45px;"></div>
+            &Sigma;&nbsp;&nbsp;
+          </div>
+          <div class="mult-dot mult-dot-2"></div>
+          <div class="matrix matrix-v">
+            <div class="rows">n</div>
+            <div class="cols">n</div>
+            V&thinsp;<sup style="font-size: 0.7em;">T</sup>
+          </div>
+        </div>
+        <p>
+          where <span class="math">U</span> and <span class="math">V</span> are orthogonal matrices and the the matrix <span class="math">&Sigma;</span> consists of descending non-negative values on its diagonal and zeros elsewhere.
+          The entries <span class="math">&sigma;<sub>1</sub> &geq; &sigma;<sub>2</sub> &geq; &sigma;<sub>3</sub> &geq; &hellip; &geq; 0</span> on the diagonal of <span class="math">&Sigma;</span> are called the <em>singular values</em> (SVs) of <span class="math">A</span>.
+          Geometrically, <span class="math">&Sigma;</span> maps the <span class="math">j</span>&#8209;th unit coordinate vector of <span class="math">n</span>&#8209;dimensional space to the <span class="math">j</span>&#8209;th coordinate vector of <span class="math">m</span>&#8209;dimensional space, scaled by the factor <span class="math">&sigma;<sub>j</sub></span>.
+          Orthogonality of <span class="math">U</span> and <span class="math">V</span> means that they correspond to rotations (possibly followed by a reflection) of <span class="math">m</span>&#8209;dimensional and <span class="math">n</span>&#8209;dimensional space respectively.
+          Therefore only <span class="math">&Sigma;</span> changes the length of vectors.
+        </p>
+        <h2>Using SVD for image compression</h2>
+        <p>
+          We can decompose a given image into the three color channels red, green and blue.
+          Each channel can be represented as a <span class="math">(m&thinsp;&times;&thinsp;n)</span>&#8209;matrix with values ranging from 0 to 255.
+          We will now compress the matrix <span class="math">A</span> representing one of the channels.
+        </p>
+        <p>
+          To do this, we compute an approximation to the matrix <span class="math">A</span> that takes only a fraction of the space to store.
+          Now here's the great thing about SVD: the data in the matrices <span class="math">U</span>, <span class="math">&Sigma;</span> and <span class="math">V</span> is sorted by how much it contributes to the matrix <span class="math">A</span> in the product.
+          That enables us to get quite a good approximation by simply using only the most important parts of the matrices.
+        </p>
+      </div>
+      <div class="right-column">
+        <p>
+          We now choose a number <span class="math">k</span> of singular values that we are going to use for the approximation.
+          The higher this number, the better the quality of the approximation gets but also the more data is needed to encode it.
+          We now take only the first <span class="math">k</span> columns of <span class="math">U</span> and <span class="math">V</span> and the upper left <span class="math">(k&thinsp;&times;&thinsp;k)</span>-square of <span class="math">&Sigma;</span>, containing the <span class="math">k</span> largest (and therefore most important) singular values.
+          We then have
+        </p>
+        <div class="schema schema-b">
+          <div class="matrix matrix-a">
+            <div class="rows">m</div>
+            <div class="cols">n</div>
+            A
+          </div>
+          <div class="equals">&approx;</div>
+          <div class="matrix matrix-u">
+            <div class="range"></div>
+            <div class="rows">m</div>
+            <div class="cols">m</div>
+            <div class="cols-k">k</div>
+            U
+          </div>
+          <div class="mult-dot mult-dot-1"></div>
+          <div class="matrix matrix-sigma">
+            <div class="range"></div>
+            <div class="rows">m</div>
+            <div class="cols">n</div>
+            <div class="cols-k">k</div>
+            <div class="rows-k">k</div>
+            <div class="sv" style="left: 0px; top: 0px;"></div>
+            <div class="sv" style="left: 5px; top: 5px;"></div>
+            <div class="sv unimportant" style="left: 10px; top: 10px;"></div>
+            <div class="sv unimportant" style="left: 15px; top: 15px;"></div>
+            <div class="sv unimportant" style="left: 20px; top: 20px;"></div>
+            <div class="sv unimportant" style="left: 25px; top: 25px;"></div>
+            <div class="sv unimportant" style="left: 30px; top: 30px;"></div>
+            <div class="sv unimportant" style="left: 35px; top: 35px;"></div>
+            <div class="sv unimportant" style="left: 40px; top: 40px;"></div>
+            <div class="sv unimportant" style="left: 45px; top: 45px;"></div>
+            &Sigma;&nbsp;&nbsp;
+          </div>
+          <div class="mult-dot mult-dot-2"></div>
+          <div class="matrix matrix-v">
+            <div class="range"></div>
+            <div class="rows">n</div>
+            <div class="cols">n</div>
+            <div class="rows-k">k</div>
+            V&thinsp;<sup style="font-size: 0.7em;">T</sup>
+          </div>
+        </div>
+        <p>
+          The amount of data needed to store this approximation is proportional to the colored area:
+        </p>
+        <p class="center math">
+          compressed size = <span class="u-color">m&thinsp;&times;&thinsp;k</span> + <span class="sigma-color">k</span> + <span class="v-color">k&thinsp;&times;&thinsp;n</span> = k &times; (<span class="sigma-color">1</span> + <span class="u-color">m</span> + <span class="v-color">n</span>)
+        </p>
+        <p>
+          (Actually, slightly less space is needed due to the orthogonality of <span class="math">U</span> and <span class="math">V</span>.)
+          One can prove that this approximation is <a href="https://en.wikipedia.org/wiki/Low-rank_approximation#Basic_low-rank_approximation_problem" title="Eckart–Young–Mirsky theorem">optimal in a certain sense</a>.
+        </p>
+        <p>
+          This demo lets you choose the number of singular values <span class="math">k</span> and see how this choice affects the quality of the approximation and the compression rate.
+          Notice how for all photographs, the graph showing the singular values looks like a hyperbola: there are only a few really large SVs and a long tail of relatively smaller SVs.
+          In contrast, for the random noise image the graph of SVs looks roughly linear.
+        </p>
+        <p>
+          SVD is routinely used in statistics for <a href="https://en.wikipedia.org/wiki/Principal_component_analysis">principal component analysis</a> and in numerical simulations for <a href="https://en.wikipedia.org/wiki/Model_order_reduction">reducing the order of models</a>.
+          For image compression, more sophisticated methods like <a href="https://www.youtube.com/watch?v=n_uNPbdenRs">JPG</a> that take human perception into account generally outperform compression using SVD.
+        </p>
+        <h2>About this demo</h2>
+        <p>
+          The computation of the SVD is performed on the client-side using <a href="https://webassembly.org/">WebAssembly</a>.
+          We use the algorithm implemented by the Rust library <a href="https://nalgebra.org/">nalgebra</a>.
+          The SVDs of all three color channels are computed in parallel using one <a href="https://en.wikipedia.org/wiki/Web_worker">web worker</a> for every channel.
+          To provide the quick preview, we use <a href="https://research.facebook.com/blog/294071574113354/fast-randomized-svd/">a randomized algorithm</a> to compute an approximate truncated SVD with 50 singular values.
+
+          The user interface uses <a href="http://facebook.github.io/react/">React</a>, <a href="https://github.com/akiran/react-slick">react-slick</a> and <a href="http://refreshless.com/nouislider/">noUiSlider</a>.
+          Thanks to the creators of all these great projects!
+        </p>
+      </div>
+    </div>
+    <div class="credits">
+      <p>
+        Built by <a href="http://github.com/timjb">Tim Baumann</a>. Fork this project on <a href="https://github.com/timjb/svd-image-compression-demo">GitHub</a>.
+      </p>
+    </div>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+
+</html>

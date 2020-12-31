@@ -1,0 +1,430 @@
+* { margin: 0; padding: 0; }
+
+html { height: 100%; }
+
+body {
+  font-family: 'Lucida Grande','Trebuchet MS','Bitstream Vera Sans',Verdana,Helvetica,sans-serif;
+  min-height: 100%;
+  /*font-size: 16px;*/
+}
+
+h1, h2, h3, h4 {
+  font-weight: normal;
+  font-family: futura, 'century gothic', 'twentieth century', calibri, verdana, helvetica, arial;
+}
+
+h1 {
+  font-size: 52px;
+  padding: 40px 0;
+}
+
+p {
+  margin: 0 0 20px;
+}
+
+.wrapper {
+  margin: 0 auto;
+  width: 790px;
+}
+
+.app { margin: 0 0 60px; }
+
+.image-container {
+  margin: 0 auto 40px;
+  min-width: 800px;
+  background: #eee;
+  position: relative;
+}
+
+.drop-target {
+  position: fixed;
+  left: 0; top: 0; right: 0; bottom: 0;
+  z-index: 1000;
+}
+
+.drop-target.active {
+  background: rgba(0, 100, 200, 0.1);
+  outline: 5px dashed #00a;
+  outline-offset: -5px;
+}
+
+.image-container > img,
+.image-container > canvas,
+.image-container > .placeholder {
+  box-shadow: 2px 2px 20px 0px #bbb;
+  display: block;
+  position: absolute; left: 0; top: -10px;
+}
+
+.info-bar {
+  background: #222;
+  margin: 0; padding: 4px 10px;
+  width: 480px;
+  color: #fff;
+  position: absolute; bottom: -10px; left: 0;
+}
+
+.options {
+  height: 64px;
+  margin: 0 0 20px;
+}
+
+/* Clearfix hack: http://www.positioniseverything.net/easyclearing.html */
+.clearfix:after {
+  content: ".";
+  display: block;
+  height: 0;
+  clear: both;
+  visibility: hidden;
+}
+
+.gallery {
+  margin: 0 -5px;
+}
+
+.gallery a {
+  display: block;
+  margin: 0 5px;
+}
+
+.gallery a:hover {
+  opacity: 0.8;
+}
+
+.slick-next:before, .slick-prev:before {
+  color: #888;
+}
+
+.caption {
+  margin: 4px 0;
+}
+
+.caption a {
+  text-decoration: none;
+  color: #aaa;
+  font-size: 12px;
+}
+
+.caption a:hover {
+  color: #555;
+}
+
+.stats {
+  position: absolute;
+  right: 10px; top: 20px; bottom: 20px;
+  color: #444;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.stats p {
+  margin: 0 0 10px;
+}
+
+.stats table {
+  border-spacing: 0;
+  margin: 0 0 10px;
+}
+
+.stats th {
+  text-align: left;
+  padding-right: 10px;
+}
+
+.label {
+  color: #666;
+  /*font-variant: small-caps;*/
+  font-weight: normal;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.toggle-show-svs {
+  margin-top: 10px;
+  font-size: 11px;
+}
+
+.button {
+  text-decoration: none;
+  display: inline-block;
+  color: inherit;
+  padding: 4px 10px;
+  border-style: solid;
+  border-color: #ccc #ddd #ddd #ccc;
+  border-width: 1px 2px 3px 1px;
+  background: #f3f3f3;
+  cursor: pointer;
+}
+.button:hover {
+  background: #eee;
+}
+.button:active,
+.button.active {
+  border-color: #666 #888 #888 #666;
+  border-width: 2px 1px 1px 2px;
+  background: linear-gradient(to bottom, #aaa 0%, #ccc 100%);
+}
+.button.active:hover {
+  background: linear-gradient(to bottom, #999 0%, #bbb 100%);
+}
+
+.stats .hint {
+  color: #aaa;
+  margin: 0;
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  font-size: 11px;
+}
+
+.check-box {
+  display: inline-block;
+  margin-right: 4px;
+  font-size: 15px;
+}
+
+.toggle-hover-original {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.toggle-hover-original .text {
+  text-decoration: line-through;
+}
+
+.toggle-hover-original.active .text {
+  text-decoration: none;
+}
+
+.valign {
+  display: inline-block;
+  padding: 4px 0 6px;
+  vertical-align: bottom;
+}
+
+/*
+ * Hack to style the file upload button
+ * see http://stackoverflow.com/questions/1084925/input-type-file-show-only-button
+ */
+.file-input-button {
+  position: relative;
+  font-size: inherit;
+  cursor: default;
+  padding: 3px 6px;
+  margin: 0 5px;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+
+.file-input-button span {
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.file-input-button input {
+  cursor: pointer;
+  display: block;
+  position: absolute; top: 0; right: 0;
+  height: 100%;
+  opacity: 0;
+  font-size: 40px;
+}
+
+.explanation, .credits {
+  margin: 20px 0;
+  color: #444;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+/* <sub> should not produce extra line spacing */
+.explanation sub {
+  display: inline-block;
+  font-size: 10px;
+  vertical-align: -4px;
+  margin: 0 0 -6px;
+}
+
+.explanation .left-column,
+.explanation .right-column {
+  width: 380px;
+  text-align: justify;
+}
+
+.explanation .left-column { float: left; }
+.explanation .right-column { float: right; }
+
+.explanation p, .credits p {
+  margin: 0 0 18px;
+}
+
+.math {
+  font-style: italic;
+  white-space: nowrap;
+}
+
+h2 { font-size: 15px; line-height: 36px; margin: 0; }
+
+.explanation a,
+.credits a {
+  text-decoration: none;
+  color: #4682B4;
+  font-weight: bold;
+}
+
+.explanation a:hover,
+.credits a:hover {
+  color: #483D8B;
+}
+
+.u-color, .sigma-color, .v-color { font-weight: bold; }
+
+.schema {
+  font-family: futura, 'century gothic', 'twentieth century', calibri, verdana, helvetica, arial;
+  font-size: 20px;
+  height: 108px; width: 370px;
+  margin: 0 auto 18px;
+  position: relative;
+}
+
+.schema > * {
+  position: absolute;
+  text-align: center;
+}
+
+.matrix {
+  color: #fff;
+}
+
+.schema-b .matrix-u,
+.schema-b .matrix-sigma,
+.schema-b .matrix-v {
+  border: 1px dashed #888;
+  margin: -1px 0 0 -1px;
+  background-color: transparent;
+  color: inherit;
+}
+
+.matrix:hover,
+.matrix:hover .range,
+.matrix:hover .sv.unimportant {
+  background-image: url(matrix_grid.png);
+}
+
+.matrix .rows,
+.matrix .cols,
+.matrix .rows-k,
+.matrix .cols-k {
+  position: absolute;
+  font-size: 11px;
+  color: #888;
+}
+.matrix .rows,
+.matrix .cols {
+  display: none;
+}
+
+.matrix .range {
+  position: absolute;
+}
+
+.matrix .rows, .matrix .rows-k {
+  left: -12px; top: 0; bottom: 0;
+  width: 8px;
+  text-align: right;
+}
+.matrix .cols, .matrix .cols-k {
+  top: -12px; left: 0; right: 0;
+  line-height: 1em;
+}
+.matrix .rows-k { line-height: 1em; }
+.matrix .cols-k { left: 2px; text-align: left; }
+
+.matrix:hover .rows,
+.matrix:hover .cols,
+.matrix:hover .rows-k,
+.matrix:hover .cols-k {
+  display: block;
+}
+
+.matrix .rows-n {}
+.matrix .cols-n {}
+.matrix .rows-m {}
+.matrix .cols-m {}
+
+.mult-dot {
+  width: 2px; height: 2px;
+  background: #888;
+}
+
+.matrix-a {
+  top: 9px; left: 10px;
+  width: 50px; height: 90px; line-height: 90px;
+  background: #3D9970;
+}
+
+.equals {
+  top: 29px; left: 75px;
+  width: 30px; height: 50px; line-height: 50px;
+  font-size: 32px;
+}
+
+.matrix-u {
+  top: 9px; left: 120px;
+  width: 90px; height: 90px; line-height: 90px;
+}
+.matrix-u .range { width: 10px; height: 90px; }
+.matrix-u, .matrix-u .range { background: #85144b; }
+.u-color { color: #85144b; }
+
+.mult-dot-1 {
+  top: 53px; left: 223px;
+}
+
+.matrix-sigma {
+  top: 9px; left: 235px;
+  width: 50px; height: 90px; line-height: 90px;
+}
+.matrix-sigma .range { width: 10px; height: 10px; }
+.matrix-sigma, .matrix-sigma .range { background: #ccc; }
+.sigma-color { color: #FF851B; }
+
+.matrix-sigma .sv {
+  width: 5px; height: 5px;
+  background-color: #FF851B;
+  position: absolute;
+}
+.matrix-sigma .sv.unimportant {
+  background-color: #FFF0E4;
+}
+
+.mult-dot-2 {
+  top: 53px; left: 296px;
+}
+
+.matrix-v {
+  top: 29px; left: 310px;
+  width: 50px; height: 50px; line-height: 40px;
+}
+.matrix-v .range { width: 50px; height: 10px; }
+.matrix-v .rows { line-height: 50px; }
+.matrix-v, .matrix-v .range { background: #0074D9; }
+.v-color { color: #0074D9; }
+
+.center { text-align: center; }
+
+.credits {
+  margin: 18px 0;
+  color: #888;
+  text-align: center;
+}
+
+.credits a {
+  color: #888;
+}
+
+.credits a:hover {
+  color: #666;
+}
+
+.clear { clear: both; }
