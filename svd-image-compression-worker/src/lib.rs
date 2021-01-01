@@ -2,6 +2,7 @@ mod utils;
 
 use js_sys::Float64Array;
 use nalgebra::base::*;
+use nalgebra::linalg::SVD;
 use rand::distributions::Uniform;
 use rand::rngs::SmallRng;
 use rand::SeedableRng;
@@ -48,14 +49,74 @@ impl SvdResult {
     }
 }
 
-// TODO: Sort singular values descending
-// not done by default, see https://github.com/dimforge/nalgebra/issues/349
+fn permute_columns<T>(mat: &mut DMatrix<f64>, perm: &Vec<(T, usize)>) {
+    assert!(mat.ncols() == perm.len());
+    let n = mat.ncols();
+    let mut already_permuted = vec![0; n]; // TODO: use bitvector?
+    for i in 0..n {
+        if already_permuted[i] == 0 {
+            let (mut j, mut k) = (i, perm[i].1);
+            while k != i {
+                mat.swap_columns(j, k);
+                already_permuted[k] = 1;
+                j = k;
+                k = perm[k].1;
+            }
+            already_permuted[i] = 1;
+        }
+    }
+}
+
+fn permute_rows<T>(mat: &mut DMatrix<f64>, perm: &Vec<(T, usize)>) {
+    assert!(mat.nrows() == perm.len());
+    let n = mat.nrows();
+    let mut already_permuted = vec![0; n]; // TODO: use bitvector?
+    for i in 0..n {
+        if already_permuted[i] == 0 {
+            let (mut j, mut k) = (i, perm[i].1);
+            while k != i {
+                mat.swap_rows(j, k);
+                already_permuted[k] = 1;
+                j = k;
+                k = perm[k].1;
+            }
+            already_permuted[i] = 1;
+        }
+    }
+}
+
+// We have to sort SVD because this is not done by default,
+// see https://github.com/dimforge/nalgebra/issues/349
+fn sort_svd(svd: &mut SVD<f64, Dynamic, Dynamic>) {
+    let mut s: Vec<(_, _)> = svd
+        .singular_values
+        .into_iter()
+        .enumerate()
+        .map(|(idx, &v)| (v, idx))
+        .collect();
+    s.sort_unstable_by(|a, b| b.partial_cmp(a).unwrap());
+    match svd.u.iter_mut().next() {
+        Some(u) => permute_columns(u, &s),
+        None => {}
+    }
+    match svd.v_t.iter_mut().next() {
+        Some(v_t) => permute_rows(v_t, &s),
+        None => {}
+    }
+    svd.singular_values = DVector::from_vec(s.into_iter().map(|(v, _idx)| v).collect());
+}
+
+fn sorted_svd(mat: DMatrix<f64>) -> SVD<f64, Dynamic, Dynamic> {
+    let mut svd = mat.svd(true, true);
+    sort_svd(&mut svd);
+    return svd;
+}
 
 #[wasm_bindgen]
 pub fn svd(a_data: &[f64], nrows: usize, ncols: usize) -> SvdResult {
     let a = DMatrix::from_column_slice(nrows, ncols, a_data);
     console::time_with_label("computation of SVD");
-    let svd = a.svd(true, true);
+    let svd = sorted_svd(a);
     console::time_end_with_label("computation of SVD");
     return SvdResult::new(svd.u.unwrap(), svd.singular_values, svd.v_t.unwrap());
 }
@@ -65,7 +126,6 @@ pub fn svd(a_data: &[f64], nrows: usize, ncols: usize) -> SvdResult {
 // Precondition: t <= MIN(nrows, ncols)
 #[wasm_bindgen]
 pub fn svd_simple_approx(a_data: &[f64], nrows: usize, ncols: usize, t: usize) -> SvdResult {
-    console::log_1(&JsValue::from_str("test log"));
     let a = DMatrix::from_column_slice(nrows, ncols, a_data);
 
     console::time_with_label("computation of approximate SVD");
@@ -85,7 +145,7 @@ pub fn svd_simple_approx(a_data: &[f64], nrows: usize, ncols: usize, t: usize) -
     let b = q.tr_mul(&a);
 
     // Compute the SVD of B
-    let b_svd = b.svd(true, true);
+    let b_svd = sorted_svd(b);
 
     let u = q * b_svd.u.unwrap();
 
