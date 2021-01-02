@@ -49,38 +49,38 @@ impl SvdResult {
     }
 }
 
-fn permute_columns<T>(mat: &mut DMatrix<f64>, perm: &Vec<(T, usize)>) {
-    assert!(mat.ncols() == perm.len());
+fn permute_columns<T>(mat: &mut DMatrix<f64>, inv_perm: &Vec<(T, usize)>) {
+    assert!(mat.ncols() == inv_perm.len());
     let n = mat.ncols();
-    let mut already_permuted = vec![0; n]; // TODO: use bitvector?
+    let mut already_permuted = vec![false; n];
     for i in 0..n {
-        if already_permuted[i] == 0 {
-            let (mut j, mut k) = (i, perm[i].1);
+        if !already_permuted[i] {
+            let (mut j, mut k) = (i, inv_perm[i].1);
             while k != i {
                 mat.swap_columns(j, k);
-                already_permuted[k] = 1;
+                already_permuted[k] = true;
                 j = k;
-                k = perm[k].1;
+                k = inv_perm[k].1;
             }
-            already_permuted[i] = 1;
+            already_permuted[i] = true;
         }
     }
 }
 
-fn permute_rows<T>(mat: &mut DMatrix<f64>, perm: &Vec<(T, usize)>) {
-    assert!(mat.nrows() == perm.len());
+fn permute_rows<T>(mat: &mut DMatrix<f64>, inv_perm: &Vec<(T, usize)>) {
+    assert!(mat.nrows() == inv_perm.len());
     let n = mat.nrows();
-    let mut already_permuted = vec![0; n]; // TODO: use bitvector?
+    let mut already_permuted = vec![false; n];
     for i in 0..n {
-        if already_permuted[i] == 0 {
-            let (mut j, mut k) = (i, perm[i].1);
+        if !already_permuted[i] {
+            let (mut j, mut k) = (i, inv_perm[i].1);
             while k != i {
                 mat.swap_rows(j, k);
-                already_permuted[k] = 1;
+                already_permuted[k] = true;
                 j = k;
-                k = perm[k].1;
+                k = inv_perm[k].1;
             }
-            already_permuted[i] = 1;
+            already_permuted[i] = true;
         }
     }
 }
