@@ -56,6 +56,7 @@ export function computeSvds(
       state = workerStateLens.set(state, s);
     } else {
       s.computingSvd = true;
+      s.approxSvd = s.fullSvd = null;
     }
     const buffer = mkColorLens<Float64Array>().get(channels).buffer;
     s.worker.postMessage(protocol.makeSetInputReq({ a: buffer, m: m, n: n }), [buffer]);
