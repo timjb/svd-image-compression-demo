@@ -1,42 +1,12 @@
 import * as React from "react";
 import { Gallery, FullGalleryImageDesc } from "./Gallery";
 import * as imageSvd from "./image-svd";
-import * as types from "../shared/types";
 import { SingularValuesSlider } from "./SingularValuesSlider";
 import { FileInputField } from "./FileInputField";
-import { computeSvds } from "./workerCommunication";
 import { SvdApproximation } from "./SvdApproximation";
 import { SingularValuesDiagram } from "./SingularValuesDiagram";
 import { ImagePlaceholder } from "./ImagePlaceholder";
-
-function toFloat32Array(f64A: Float64Array | number[]): Float32Array {
-  //return new Float32Array(f64A); // doesn't work in Firefox
-  const l = f64A.length;
-  const f32A = new Float32Array(l);
-  for (let i = 0; i < l; i++) {
-    f32A[i] = f64A[i];
-  }
-  return f32A;
-}
-
-function toFloat32Svd(svd: types.SVD64): types.SVD {
-  return {
-    u: toFloat32Array(svd.u),
-    s: toFloat32Array(svd.s),
-    vt: toFloat32Array(svd.vt),
-    d: svd.d,
-    m: svd.m,
-    n: svd.n,
-  };
-}
-
-function toFloat32Svds(svds: types.SVDs64): types.SVDs {
-  return {
-    red: toFloat32Svd(svds.red),
-    green: toFloat32Svd(svds.green),
-    blue: toFloat32Svd(svds.blue),
-  };
-}
+import { SvdComputationManager, SvdInfo } from "./svdComputationManager";
 
 function loadImage(src: string, callback: (img: HTMLImageElement) => void): void {
   const img = new Image();
@@ -88,25 +58,40 @@ function contains<V, L extends Indexable<V>>(list: L, el: V): boolean {
   return false;
 }
 
+enum SvdStatus {
+  CURRENTLY_COMPUTING = "CURRENTLY_COMPUTING",
+  COMPUTED = "COMPUTED",
+}
+
+interface SvdStateCurrentlyComputing {
+  status: SvdStatus.CURRENTLY_COMPUTING;
+}
+
+interface SvdStateComputed extends SvdInfo {
+  status: SvdStatus.COMPUTED;
+}
+
 interface AppState {
   width: number;
   height: number;
   placeholderImg: null | string;
   numSvs: number;
-  approx: boolean;
   showSvs: boolean;
   error: string;
   hoverToSeeOriginal: boolean;
   guessingPage: boolean;
   hover: boolean;
   img: null | HTMLImageElement;
-  svds: null | types.SVDs;
+  svdState: SvdState;
 }
 
 type AppProps = Record<string, unknown>;
 
+type SvdState = SvdStateCurrentlyComputing | SvdStateComputed;
+
 export class App extends React.Component<AppProps, AppState> {
   private svdViewRef: React.RefObject<SvdApproximation>;
+  private svdComputationManager: SvdComputationManager;
 
   constructor(props: AppProps) {
     super(props);
@@ -115,16 +100,21 @@ export class App extends React.Component<AppProps, AppState> {
       height: firstImg.h,
       placeholderImg: firstImg.approxSrc,
       numSvs: 5,
-      approx: true,
       showSvs: false,
       error: "",
       hoverToSeeOriginal: true,
       guessingPage: false,
       hover: false,
       img: null,
-      svds: null,
+      svdState: { status: SvdStatus.CURRENTLY_COMPUTING },
     };
     this.svdViewRef = React.createRef();
+    this.svdComputationManager = new SvdComputationManager((svdInfo) => {
+      this.setState({
+        svdState: { status: SvdStatus.COMPUTED, ...svdInfo },
+      });
+    });
+    this.svdComputationManager.setRank(this.state.numSvs);
   }
 
   componentDidMount(): void {
@@ -133,6 +123,7 @@ export class App extends React.Component<AppProps, AppState> {
   }
 
   initializeImage(img: HTMLImageElement): void {
+    console.trace("initializeImage");
     const { width, height } = img;
 
     let imageData: ImageData;
@@ -154,12 +145,15 @@ export class App extends React.Component<AppProps, AppState> {
       }
     }
 
-    this.setState({ width, height, img, svds: null, error: "" } as AppState);
     const pxls = imageSvd.imageDataToPixels(imageData);
-
-    computeSvds(height, width, pxls, (svds) => {
-      this.setState({ svds: toFloat32Svds(svds), approx: svds.approx } as AppState);
-    });
+    this.setState({
+      width,
+      height,
+      img,
+      error: "",
+      svdState: { status: SvdStatus.CURRENTLY_COMPUTING },
+    } as AppState);
+    this.svdComputationManager.computeSvd(height, width, pxls);
   }
 
   loadImage(url: string, placeholderImg: null | string = null): void {
@@ -213,13 +207,8 @@ export class App extends React.Component<AppProps, AppState> {
   }
 
   onUpdateSvs(numSvs: number): void {
+    this.svdComputationManager.setRank(numSvs);
     this.setState({ numSvs: numSvs } as AppState);
-  }
-
-  onChangeSvs(): void {
-    window.setTimeout(() => {
-      this.svdViewRef.current?.refreshImageData();
-    }, 400);
   }
 
   clickShowSvs(evt: React.MouseEvent<HTMLElement>): void {
@@ -260,9 +249,9 @@ export class App extends React.Component<AppProps, AppState> {
       infoBar = this.state.error;
     } else if (this.state.hover) {
       infoBar = "Drop now!";
-    } else if (!this.state.svds) {
+    } else if (this.state.svdState.status === SvdStatus.CURRENTLY_COMPUTING) {
       infoBar = <span>Please wait &hellip;</span>;
-    } else if (this.state.approx) {
+    } else if (this.state.svdState.isApproximation) {
       infoBar = (
         <span>
           Showing approximate SVD &nbsp;
@@ -288,19 +277,22 @@ export class App extends React.Component<AppProps, AppState> {
 
     let mainImageView: null | React.Component | JSX.Element = null;
     let maxSvs: number;
-    if (this.state.svds && img) {
+    if (
+      this.state.svdState.status === SvdStatus.COMPUTED &&
+      this.state.svdState.lowRankApproximation !== undefined &&
+      img
+    ) {
       mainImageView = (
         <SvdApproximation
           ref={this.svdViewRef}
-          svds={this.state.svds}
-          numSvs={numSvs}
+          lowRankApproximation={this.state.svdState.lowRankApproximation}
           width={w}
           height={h}
           img={img}
           hoverToSeeOriginal={this.state.hoverToSeeOriginal}
         />
       );
-      maxSvs = this.state.svds.red.d;
+      maxSvs = this.state.svdState.singularValues.red.length;
     } else {
       // the SVDs have not been computed yet
       maxSvs = 1;
@@ -374,8 +366,13 @@ export class App extends React.Component<AppProps, AppState> {
         {this.state.hover ? dropTarget : ""}
         <div className="image-container" style={imageContainerStyle}>
           {mainImageView ? mainImageView : ""}
-          {this.state.svds && this.state.showSvs ? (
-            <SingularValuesDiagram svds={this.state.svds} numSvs={numSvs} width={w} height={h} />
+          {this.state.svdState.status === SvdStatus.COMPUTED && this.state.showSvs ? (
+            <SingularValuesDiagram
+              singularValues={this.state.svdState.singularValues}
+              numSvs={numSvs}
+              width={w}
+              height={h}
+            />
           ) : (
             ""
           )}
@@ -388,7 +385,6 @@ export class App extends React.Component<AppProps, AppState> {
               value={numSvs}
               maxSvs={maxSvs}
               onUpdate={this.onUpdateSvs.bind(this)}
-              onChange={this.onChangeSvs.bind(this)}
               max={Math.min(w, h)}
             />
           </div>

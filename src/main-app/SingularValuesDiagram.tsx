@@ -1,8 +1,8 @@
 import { HoverCanvasView, HoverCanvasViewState, HoverCanvasViewProps } from "./HoverCanvasView";
-import * as types from "../shared/types";
+import { RGB } from "./rgb";
 
 export interface SingularValuesDiagramProps extends HoverCanvasViewProps {
-  svds: types.SVDs;
+  singularValues: RGB<Float64Array>;
   numSvs: number;
 }
 
@@ -24,12 +24,12 @@ export class SingularValuesDiagram extends HoverCanvasView<
     ctx.clearRect(0, 0, w, h);
     ctx.fillStyle = hover ? "rgb(90, 90, 90)" : "rgba(90, 90, 90, 0.35)";
     ctx.fillRect(0, 0, w, h);
-    const redSvs = this.props.svds.red.s;
-    const greenSvs = this.props.svds.green.s;
-    const blueSvs = this.props.svds.blue.s;
+    const redSvs = this.props.singularValues.red;
+    const greenSvs = this.props.singularValues.green;
+    const blueSvs = this.props.singularValues.blue;
     const norm = (redSvs[5] + greenSvs[5] + blueSvs[5]) / (3 * h);
     const numSvs = this.props.numSvs;
-    const d = this.props.svds.red.d;
+    const d = redSvs.length;
     const imageData = ctx.getImageData(0, 0, w, h);
     const data = imageData.data;
     for (let i = 0; i < d; i++) {

@@ -1,46 +1,11 @@
 import * as React from "react";
 import * as noUiSlider from "nouislider";
 
-// Copied from underscore.js (https://github.com/jashkenas/underscore)
-//
-// Returns a function, that, as long as it continues to be invoked, will not
-// be triggered. The function will be called after it stops being called for
-// N milliseconds. If `immediate` is passed, trigger the function on the
-// leading edge, instead of the trailing.
-function debounce(func: () => void, wait: number, immediate = false): () => void {
-  const getNow = Date.now || ((): number => new Date().getTime());
-
-  let timeout: null | ReturnType<typeof setTimeout>, timestamp: number;
-
-  const later = (): void => {
-    const last = getNow() - timestamp;
-
-    if (last < wait && last >= 0) {
-      timeout = setTimeout(later, wait - last);
-    } else {
-      timeout = null;
-      if (!immediate) {
-        func();
-      }
-    }
-  };
-
-  return (): void => {
-    timestamp = getNow();
-    const callNow = immediate && !timeout;
-    if (!timeout) timeout = setTimeout(later, wait);
-    if (callNow) {
-      func();
-    }
-  };
-}
-
 export interface SVSliderProps {
   value: number;
   maxSvs: number;
   max: number;
   onUpdate: (svs: number) => void;
-  onChange: (svs: number) => void;
 }
 
 export class SingularValuesSlider extends React.Component<SVSliderProps> {
@@ -83,28 +48,14 @@ export class SingularValuesSlider extends React.Component<SVSliderProps> {
     noUiSlider.create(sliderEl, this.getSliderOptions());
     const slider = (sliderEl as noUiSlider.Instance).noUiSlider;
     const getSliderValue = (): number => SingularValuesSlider.getSliderValue(slider);
-    slider.on(
-      "update",
-      debounce(() => {
-        const val = getSliderValue();
-        if (val !== this.props.value) {
-          if (this.props.onUpdate) {
-            this.props.onUpdate(val);
-          }
+    slider.on("update", () => {
+      const val = getSliderValue();
+      if (val !== this.props.value) {
+        if (this.props.onUpdate) {
+          this.props.onUpdate(val);
         }
-      }, 50),
-    );
-    slider.on(
-      "change",
-      debounce(() => {
-        const val = getSliderValue();
-        if (val !== this.props.value) {
-          if (this.props.onChange) {
-            this.props.onChange(val);
-          }
-        }
-      }, 50),
-    );
+      }
+    });
   }
   private getSliderOptions(): noUiSlider.Options {
     const maxVal = this.props.max;

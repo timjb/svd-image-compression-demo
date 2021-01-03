@@ -1,41 +1,75 @@
-import * as types from "./types";
+export enum WorkerReqType {
+  COMPUTE_SVD = "compute-svd",
+  COMPUTE_LOW_RANK_APPROXIMATION = "compute-low-rank-approximation",
+}
 
-interface BaseReq<s> {
+interface BaseReq<s extends WorkerReqType> {
   msg: s;
 }
 
-export interface SetInputArgs {
+interface ComputeSvdArgs {
   m: number;
   n: number;
   a: ArrayBuffer;
-}
-
-export type SetInputReq = BaseReq<"set-input"> & SetInputArgs;
-
-export function makeSetInputReq(args: SetInputArgs): SetInputReq {
-  return {
-    msg: "set-input",
-    a: args.a,
-    m: args.m,
-    n: args.n,
-  };
-}
-
-interface ComputeSVDArgs {
   approx: boolean;
 }
 
-export type ComputeSVDReq = BaseReq<"compute-svd"> & ComputeSVDArgs;
+export type ComputeSvdReq = BaseReq<WorkerReqType.COMPUTE_SVD> & ComputeSvdArgs;
 
-export function makeComputeSVDReq(args: ComputeSVDArgs): ComputeSVDReq {
+export function makeComputeSvdReq(args: ComputeSvdArgs): ComputeSvdReq {
   return {
-    msg: "compute-svd",
-    approx: args.approx,
+    msg: WorkerReqType.COMPUTE_SVD,
+    ...args,
   };
 }
 
-export type WorkerReq = SetInputReq | ComputeSVDReq;
+interface ComputeLowRankApproximationArgs {
+  rank: number;
+}
 
-export type SVDRes = types.SVD64;
+export type ComputeLowRankApproximationReq = BaseReq<WorkerReqType.COMPUTE_LOW_RANK_APPROXIMATION> &
+  ComputeLowRankApproximationArgs;
 
-export type WorkerRes = SVDRes;
+export function makeComputeLowRankApproximationReq(rank: number): ComputeLowRankApproximationReq {
+  return {
+    msg: WorkerReqType.COMPUTE_LOW_RANK_APPROXIMATION,
+    rank,
+  };
+}
+
+export type WorkerReq = ComputeSvdReq | ComputeLowRankApproximationReq;
+
+export enum WorkerResType {
+  SINGULAR_VALUES = "SINGULAR-VALUES",
+  LOW_RANK_APPROXIMATION = "LOW-RANK-APPROXIMATION",
+}
+
+interface BaseRes<s extends WorkerResType> {
+  msg: s;
+}
+
+interface SingularValuesRes extends BaseRes<WorkerResType.SINGULAR_VALUES> {
+  singularValues: Float64Array;
+}
+
+export function makeSingularValuesRes(singularValues: Float64Array): SingularValuesRes {
+  return {
+    msg: WorkerResType.SINGULAR_VALUES,
+    singularValues,
+  };
+}
+
+interface LowRankApproximationRes extends BaseRes<WorkerResType.LOW_RANK_APPROXIMATION> {
+  lowRankApproximation: Float64Array;
+}
+
+export function makeLowRankApproximationRes(
+  lowRankApproximation: Float64Array,
+): LowRankApproximationRes {
+  return {
+    msg: WorkerResType.LOW_RANK_APPROXIMATION,
+    lowRankApproximation,
+  };
+}
+
+export type WorkerRes = SingularValuesRes | LowRankApproximationRes;
