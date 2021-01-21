@@ -15,6 +15,7 @@ in
       })
       pkgs.cargo
       pkgs.wasm-pack
+      pkgs.wabt # WebAssembly Toolkit
 
       # keep this line if you use bash
       pkgs.bashInteractive
