@@ -2,8 +2,11 @@ name: CI
 
 on:
   push:
-    branches-ignore:
-    - gh-pages
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
@@ -35,6 +38,7 @@ jobs:
       continue-on-error: true
     - name: Deploy to GitHub Pages 🚀
       uses: JamesIves/github-pages-deploy-action@3.7.1
+      if: ${{ github.event_name == 'push' }}
       with:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         BRANCH: gh-pages
