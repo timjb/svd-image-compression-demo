@@ -9,7 +9,7 @@ let
 in
   pkgs.mkShell {
     buildInputs = [
-      pkgs.nodejs-14_x
+      pkgs.nodejs-16_x
       (pkgs.latest.rustChannels.stable.rust.override {
         targets = ["wasm32-unknown-unknown"];
       })
