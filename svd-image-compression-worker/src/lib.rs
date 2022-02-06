@@ -138,6 +138,9 @@ fn permute_rows<T>(mat: &mut DMatrix<f64>, inv_perm: &Vec<(T, usize)>) {
 
 // We have to sort SVD because this is not done by default,
 // see https://github.com/dimforge/nalgebra/issues/349
+// TODO(TBa): Is this still necessary? The issue linked above is open, but the following changelog entry
+// mentions that the SVs are now sorted:
+// https://github.com/dimforge/nalgebra/blob/dev/CHANGELOG.md#0300-02-jan-2022
 fn sort_svd(svd: &mut SVD<f64, Dynamic, Dynamic>) {
     let mut s: Vec<(_, _)> = svd
         .singular_values
@@ -183,7 +186,7 @@ pub fn svd_simple_approx(a_data: &[f64], nrows: usize, ncols: usize, t: usize) -
 
     // Generate matrix Ω ∈ ℝ^{m × n}
     let mut rng = SmallRng::seed_from_u64(2342);
-    let distr = Uniform::new(-1.0, 1.0);
+    let distr: Uniform<f64> = Uniform::new(-1.0, 1.0);
     let omega: DMatrix<f64> = DMatrix::from_distribution(ncols, t, &distr, &mut rng);
 
     // Compute Y = A Ω
