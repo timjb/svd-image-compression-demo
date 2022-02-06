@@ -95,7 +95,7 @@ export class SvdComputationManager {
     this.exactWorkerManagers = createRGB(() => new SvdWorkerManager());
   }
 
-  computeSvd(m: number, n: number, channels: RGB<Float64Array>): void {
+  computeSvd(m: number, n: number, channels: RGB<Float64Array>, initialRank: number): void {
     this.approximateResult = undefined;
     this.exactResult = undefined;
 
@@ -106,7 +106,7 @@ export class SvdComputationManager {
     );
     rgbPromiseAll(singularValuesApproxPromises).then((singularValues) => {
       this.approximateResult = { singularValues };
-      this.setRank(this.requestedRank);
+      this.setRank(initialRank);
     });
 
     const singularValuesExactPromises = rgbAp(
@@ -120,7 +120,7 @@ export class SvdComputationManager {
         computedLowRankApproximation: false,
         currentlyComputingLowRankApproximation: false,
       };
-      this.setRank(this.requestedRank);
+      this.setRank(initialRank);
     });
   }
 

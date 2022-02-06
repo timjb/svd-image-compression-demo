@@ -123,7 +123,6 @@ export class App extends React.Component<AppProps, AppState> {
   }
 
   initializeImage(img: HTMLImageElement): void {
-    console.trace("initializeImage");
     const { width, height } = img;
 
     let imageData: ImageData;
@@ -153,7 +152,7 @@ export class App extends React.Component<AppProps, AppState> {
       error: "",
       svdState: { status: SvdStatus.CURRENTLY_COMPUTING },
     } as AppState);
-    this.svdComputationManager.computeSvd(height, width, pxls);
+    this.svdComputationManager.computeSvd(height, width, pxls, this.state.numSvs);
   }
 
   loadImage(url: string, placeholderImg: null | string = null): void {
