@@ -130,7 +130,7 @@ export class App extends React.Component<AppProps, AppState> {
     try {
       imageData = getImageData(img);
     } catch (exc) {
-      if (exc.message.match(/(tainted|cross-origin|insecure)/)) {
+      if (exc instanceof Error && exc.message.match(/(tainted|cross-origin|insecure)/)) {
         return window.alert(
           "Due to browser limitations (cross-origin policy), it isn't possible use pictures dragged from other sites. You have to save the image locally before you can use it.",
         );
