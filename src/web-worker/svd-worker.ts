@@ -19,7 +19,10 @@ function svd(a: Float64Array, m: number, n: number, approx: boolean): void {
       struct?.free();
       const svdStruct = (struct = approx ? wasm.svd_simple_approx(a, m, n, d) : wasm.svd(a, m, n));
       const singularValues = svdStruct.singular_values();
-      postMessage(makeSingularValuesRes(singularValues));
+      // Have to create a copy because otherwise the next line fails in Chrome with error
+      // > DOMException: Failed to execute 'postMessage' on 'DedicatedWorkerGlobalScope':
+      // > ArrayBuffer is not detachable and could not be cloned.
+      postMessage(makeSingularValuesRes(new Float64Array(singularValues)));
     },
     (e) => {
       console.log("Could not load WASM module! Error: ", e);
@@ -40,7 +43,10 @@ onmessage = (event: MessageEvent): void => {
         throw new Error(`'${WorkerReqType.COMPUTE_SVD}' must come first!`);
       }
       const lowRankApproximation = struct.compute_low_rank_approximation(data.rank);
-      postMessage(makeLowRankApproximationRes(lowRankApproximation));
+      // Have to create a copy because otherwise the next line fails in Chrome with error
+      // > DOMException: Failed to execute 'postMessage' on 'DedicatedWorkerGlobalScope':
+      // > ArrayBuffer is not detachable and could not be cloned.
+      postMessage(makeLowRankApproximationRes(new Float64Array(lowRankApproximation)));
       break;
     }
     default:
